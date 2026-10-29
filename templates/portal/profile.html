@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ cá nhân sinh viên{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <!-- Header thông tin sinh viên -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4 bg-light rounded">
+            <div class="d-flex align-items-center flex-wrap">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 mb-2 mb-md-0" style="width: 75px; height: 75px; font-size: 32px; font-weight: bold;">
+                    {{ sv.ho_ten.split()[-1][0] }}
+                </div>
+                <div class="me-auto">
+                    <h3 class="mb-1 text-primary fw-bold">{{ sv.ho_ten }}</h3>
+                    <p class="text-muted mb-0">Mã sinh viên: <strong class="text-dark">{{ sv.ma_sv }}</strong> | Lớp: <span class="badge bg-secondary">{{ sv.ma_lop }}</span> | Khóa: <strong>{{ sv.khoa_hoc }}</strong></p>
+                </div>
+                <div class="mt-3 mt-md-0 d-flex gap-2">
+                    <a href="{{ url_for('portal.print_profile') }}" target="_blank" class="btn btn-outline-dark btn-sm shadow-sm">
+                        <i class="bi bi-printer me-1"></i>In Sơ yếu lý lịch (A4)
+                    </a>
+                    <button class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#editContactModal">
+                        <i class="bi bi-pencil-square me-1"></i>Sửa thông tin liên hệ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal sửa thông tin liên hệ -->
+    <div class="modal fade" id="editContactModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ url_for('portal.update_contact') }}" method="POST">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Cập nhật thông tin liên hệ</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 small">
+                            <i class="bi bi-info-circle me-1"></i>Sinh viên được phép cập nhật Email, SĐT và Nơi ở hiện tại. Các thông tin học vụ (Mã SV, Lớp, Ngành) được khóa bảo mật.
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email cá nhân / trường cấp</label>
+                            <input type="email" class="form-control" name="email" value="{{ sv.email or '' }}" placeholder="vidu@student.neu.edu.vn">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số điện thoại</label>
+                            <input type="text" class="form-control" name="so_dien_thoai" value="{{ sv.so_dien_thoai or '' }}" placeholder="09xxxxxxxx">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Địa chỉ cư trú hiện tại / Quê quán</label>
+                            <input type="text" class="form-control" name="dia_chi" value="{{ sv.dia_chi or '' }}" placeholder="Nhập địa chỉ cư trú...">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Lưu thay đổi</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Thông tin cơ bản -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-primary fw-bold"><i class="bi bi-person-lines-fill me-2"></i>Thông tin lý lịch cá nhân</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-striped">
+                        <tbody>
+                            <tr><th style="width: 35%;">Mã sinh viên:</th><td><strong>{{ sv.ma_sv }}</strong></td></tr>
+                            <tr><th>Họ và tên:</th><td>{{ sv.ho_ten }}</td></tr>
+                            <tr><th>Ngày sinh:</th><td>{{ sv.ngay_sinh|dmy }}</td></tr>
+                            <tr><th>Giới tính:</th><td>{{ sv.gioi_tinh or '—' }}</td></tr>
+                            <tr><th>Email sinh viên:</th><td>{{ sv.email or '—' }}</td></tr>
+                            <tr><th>Số điện thoại:</th><td>{{ sv.so_dien_thoai or '—' }}</td></tr>
+                            <tr><th>Quê quán / Địa chỉ:</th><td>{{ sv.dia_chi or '—' }}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin khóa học & Ngành học -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-primary fw-bold"><i class="bi bi-mortarboard-fill me-2"></i>Thông tin học vụ & Đào tạo</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-striped">
+                        <tbody>
+                            <tr><th style="width: 35%;">Ngành đào tạo:</th><td><strong>{{ sv.ten_nganh }}</strong> ({{ sv.ma_nganh }})</td></tr>
+                            <tr><th>Lớp chuyên ngành:</th><td>{{ sv.ten_lop }} ({{ sv.ma_lop }})</td></tr>
+                            <tr><th>Khóa sinh viên:</th><td>{{ sv.khoa_hoc }}</td></tr>
+                            <tr><th>Hệ đào tạo:</th><td>Đại học Chính quy</td></tr>
+                            <tr><th>Hình thức:</th><td>Tích lũy tín chỉ</td></tr>
+                            <tr><th>Trạng thái học vụ:</th><td><span class="badge bg-success">{{ sv.trang_thai }}</span></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="mt-4 p-3 bg-light rounded d-flex justify-content-around flex-wrap gap-2">
+                        <a href="{{ url_for('portal.curriculum') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-journal-bookmark me-1"></i>Xem CTĐT & Điểm</a>
+                        <a href="{{ url_for('portal.finance') }}" class="btn btn-outline-success btn-sm"><i class="bi bi-cash-coin me-1"></i>Tra cứu học phí</a>
+                        <a href="{{ url_for('portal.support') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-chat-dots me-1"></i>Gửi hỗ trợ</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Hỗ trợ người học & Giải đáp thắc mắc{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-1"><i class="bi bi-headset me-2"></i>Hệ thống Hỗ trợ người học</h3>
+            <p class="text-muted mb-0">Tiếp nhận, xử lý phản ánh thắc mắc về học tập, học phí, lịch thi và chế độ chính sách.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-success border border-success d-flex align-items-center p-2" id="realtimeIndicator">
+                <span class="spinner-grow spinner-grow-sm text-success me-2" role="status" style="width: 10px; height: 10px;"></span>
+                Đang đồng bộ thời gian thực
+            </span>
+            {% if g.user.vai_tro == 'student' %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTicketModal">
+                <i class="bi bi-plus-circle me-1"></i>Gửi yêu cầu thắc mắc mới
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal gửi yêu cầu mới cho Sinh viên -->
+    {% if g.user.vai_tro == 'student' %}
+    <div class="modal fade" id="newTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-envelope-plus me-2"></i>Tạo yêu cầu hỗ trợ mới</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Danh mục vấn đề <span class="text-danger">*</span></label>
+                            <select class="form-select" name="danh_muc" required>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tiêu đề thắc mắc <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="chu_de" placeholder="Ví dụ: Xin xem xét lại điểm chuyên cần môn Web..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nội dung chi tiết <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="noi_dung" rows="5" placeholder="Mô tả cụ thể thông tin bạn cần nhà trường hỗ trợ..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i>Gửi yêu cầu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Danh sách yêu cầu -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="card-title fw-bold mb-0">
+                {% if g.user.vai_tro == 'student' %}Danh sách yêu cầu của bạn{% else %}Tất cả yêu cầu hỗ trợ từ sinh viên{% endif %}
+            </h5>
+            <span class="badge bg-secondary" id="ticketCountBadge">{{ requests_list|length }} yêu cầu</span>
+        </div>
+        <div class="card-body p-0">
+            {% if requests_list %}
+            <div class="accordion accordion-flush" id="accordionTickets">
+                {% for t in requests_list %}
+                <div class="accordion-item border-bottom ticket-row" id="ticket-item-{{ t.id }}" data-ticket-id="{{ t.id }}">
+                    <h2 class="accordion-header" id="heading{{ t.id }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ t.id }}">
+                            <div class="d-flex w-100 justify-content-between align-items-center me-3 flex-wrap">
+                                <div class="mb-1 mb-md-0">
+                                    <span class="badge bg-info text-dark me-2">{{ t.danh_muc }}</span>
+                                    <strong class="text-dark">{{ t.chu_de }}</strong>
+                                    {% if g.user.vai_tro != 'student' %}
+                                    <span class="text-muted ms-2">(SV: {{ t.ho_ten_sv }} - {{ t.ma_sv }})</span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="status-badge-container me-3" id="status-container-{{ t.id }}">
+                                        {% if t.trang_thai == 'Chờ xử lý' %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xử lý</span>
+                                        {% elif t.trang_thai == 'Đang xử lý' %}
+                                            <span class="badge bg-primary"><i class="bi bi-arrow-repeat me-1"></i>Đang xử lý</span>
+                                        {% else %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã giải quyết</span>
+                                        {% endif %}
+                                    </span>
+                                    <small class="text-muted">{{ t.ngay_gui }}</small>
+                                </div>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse{{ t.id }}" class="accordion-collapse collapse" data-bs-parent="#accordionTickets">
+                        <div class="accordion-body bg-light p-4">
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-dark"><i class="bi bi-chat-left-text me-2"></i>Nội dung phản ánh của sinh viên:</h6>
+                                <div class="p-3 bg-white border rounded">{{ t.noi_dung|nl2br }}</div>
+                            </div>
+
+                            <!-- Vùng phản hồi được JS tự động cập nhật thời gian thực -->
+                            <div class="reply-container" id="reply-container-{{ t.id }}">
+                                {% if t.phan_hoi %}
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-success"><i class="bi bi-reply-fill me-2"></i>Câu trả lời từ Bộ phận Hỗ trợ ({{ t.ten_nguoi_phan_hoi or 'Ban Hỗ trợ' }} - {{ t.ngay_phan_hoi }}):</h6>
+                                    <div class="p-3 bg-white border-start border-success border-4 rounded shadow-sm">
+                                        {{ t.phan_hoi|nl2br }}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-secondary py-2 small mb-3 waiting-alert">
+                                    <i class="bi bi-clock me-1"></i>Yêu cầu đang được gửi tới phòng ban chức năng để giải quyết.
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Khung phản hồi dành riêng cho Nhân viên hỗ trợ & Admin -->
+                            {% if g.user.vai_tro in ['admin', 'support_staff'] %}
+                            <div class="mt-3 p-3 bg-white rounded border">
+                                <h6 class="fw-bold text-primary mb-2"><i class="bi bi-reply-fill me-2"></i>Nhân viên hỗ trợ giải đáp phản ánh:</h6>
+                                <form action="{{ url_for('portal.reply_support', ticket_id=t.id) }}" method="POST">
+                                    <div class="mb-2">
+                                        <textarea class="form-control" name="phan_hoi" rows="2" placeholder="Nhập câu trả lời giải đáp thắc mắc cho sinh viên..." required>{{ t.phan_hoi or '' }}</textarea>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted fst-italic">
+                                            <i class="bi bi-info-circle me-1"></i>Hệ thống sẽ tự động cập nhật trạng thái yêu cầu sang <strong>"Đã giải quyết"</strong> sau khi gửi phản hồi.
+                                        </small>
+                                        <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm">
+                                            <i class="bi bi-send-check me-1"></i>Gửi phản hồi & Đánh dấu đã giải quyết
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                Chưa có yêu cầu hỗ trợ nào được ghi nhận.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- SCRIPT TỰ ĐỘNG LẮNG NGHE & CẬP NHẬT TRẠNG THÁI THỜI GIAN THỰC (REAL-TIME POLLING) -->
+<script>
+    // Hàm thăm dò API định kỳ mỗi 3 giây để bắt kịp phản hồi của cán bộ ngay lập tức
+    function pollTicketStatus() {
+        fetch("{{ url_for('portal.api_ticket_status') }}")
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(item => {
+                    const statusContainer = document.getElementById(`status-container-${item.id}`);
+                    const replyContainer = document.getElementById(`reply-container-${item.id}`);
+
+                    if (statusContainer) {
+                        let badgeHtml = '';
+                        if (item.trang_thai === 'Chờ xử lý') {
+                            badgeHtml = '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xử lý</span>';
+                        } else if (item.trang_thai === 'Đang xử lý') {
+                            badgeHtml = '<span class="badge bg-primary"><i class="bi bi-arrow-repeat me-1"></i>Đang xử lý</span>';
+                        } else {
+                            badgeHtml = '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã giải quyết</span>';
+                        }
+                        statusContainer.innerHTML = badgeHtml;
+                    }
+
+                    if (replyContainer && item.phan_hoi) {
+                        const responder = item.ten_nguoi_phan_hoi ? item.ten_nguoi_phan_hoi : 'Cán bộ hỗ trợ';
+                        const timeStr = item.ngay_phan_hoi ? item.ngay_phan_hoi : '';
+                        const formattedReply = item.phan_hoi.replace(/\n/g, '<br>');
+                        
+                        replyContainer.innerHTML = `
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-success"><i class="bi bi-reply-fill me-2"></i>Câu trả lời từ Bộ phận Hỗ trợ (${responder} - ${timeStr}):</h6>
+                                <div class="p-3 bg-white border-start border-success border-4 rounded shadow-sm">
+                                    ${formattedReply}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            })
+            .catch(err => console.log("Lỗi đồng bộ real-time:", err));
+    }
+
+    // Chạy ngầm mỗi 3 giây
+    setInterval(pollTicketStatus, 3000);
+</script>
+{% endblock %}
