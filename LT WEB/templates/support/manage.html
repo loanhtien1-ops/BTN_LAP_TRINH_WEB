@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "support/_macros.html" import badge_tt, badge_uu, badge_sla %}
+{% block title %}Xử lý yêu cầu hỗ trợ{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <h3 class="fw-bold text-primary mb-1"><i class="bi bi-chat-left-dots-fill me-2"></i>Xử lý yêu cầu hỗ trợ</h3>
+    <p class="text-muted">Tiếp nhận, phản hồi và cập nhật trạng thái các yêu cầu của sinh viên.</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><a class="text-decoration-none" href="{{ url_for('support.manage') }}">
+            <div class="card shadow-sm border-0"><div class="card-body py-3"><div class="text-muted small">Tổng yêu cầu</div><div class="fs-3 fw-bold text-dark">{{ tong }}</div></div></div></a></div>
+        {% for v, ten in trang_thai_list %}
+        <div class="col-6 col-md-3"><a class="text-decoration-none" href="{{ url_for('support.manage', trang_thai=v) }}">
+            <div class="card shadow-sm border-0 {{ 'border-primary border-2' if f.trang_thai == v }}"><div class="card-body py-3"><div class="text-muted small">{{ ten }}</div><div class="fs-3 fw-bold text-dark">{{ counts.get(v, 0) }}</div></div></div></a></div>
+        {% endfor %}
+    </div>
+
+    <form method="get" class="card card-body shadow-sm border-0 mb-3">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <select class="form-select" name="trang_thai" aria-label="Trạng thái">
+                    <option value="">Mọi trạng thái</option>
+                    {% for v, ten in trang_thai_list %}<option value="{{ v }}" {{ 'selected' if f.trang_thai == v }}>{{ ten }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="loai" aria-label="Loại hỗ trợ">
+                    <option value="">Mọi loại</option>
+                    {% for l in loai_list %}<option value="{{ l.id }}" {{ 'selected' if f.loai == l.id|string }}>{{ l.ten_loai }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4"><input class="form-control" name="q" value="{{ f.q }}" placeholder="Tìm theo tiêu đề, mã hoặc tên sinh viên"></div>
+            <div class="col-md-2 d-grid"><button class="btn btn-primary"><i class="bi bi-search me-1"></i>Lọc</button></div>
+        </div>
+    </form>
+
+    <div class="card shadow-sm border-0">
+        {% if tickets %}
+                <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã</th><th>Sinh viên</th><th>Tiêu đề</th><th>Loại</th><th>Ưu tiên</th>
+                        <th>Ngày gửi</th><th>Hạn 24h</th><th>Người xử lý</th><th>Trạng thái</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for t in tickets %}
+                    <tr>
+                        <td>#{{ t.id }}</td>
+                        <td title="{{ t.ma_lop }}">{{ t.ma_sv }} · {{ t.ho_ten_sv }}</td>
+                        <td class="fw-semibold text-truncate" style="max-width: 260px;" title="{{ t.tieu_de }}">{{ t.tieu_de }}</td>
+                        <td>{{ t.ten_loai }}</td>
+                        <td>{{ badge_uu(t.muc_uu_tien) }}</td>
+                        <td>{{ t.ngay_tao|dmy_gio }}</td>
+                        <td>{{ badge_sla(sla[t.id]) }}</td>
+                        <td>{{ t.ten_nguoi_xu_ly or '—' }}</td>
+                        <td>{{ badge_tt(t.trang_thai) }}</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('support.detail', yc_id=t.id) }}">Xử lý</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-muted">{{ total }} yêu cầu phù hợp · Trang {{ page }}/{{ pages }}</small>
+            <ul class="pagination pagination-sm mb-0">
+                {% for p in range(1, pages + 1) %}
+                <li class="page-item {{ 'active' if p == page }}"><a class="page-link" href="{{ url_for('support.manage', page=p, trang_thai=f.trang_thai, loai=f.loai, q=f.q) }}">{{ p }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Không có yêu cầu nào khớp bộ lọc. Thử bỏ bớt điều kiện lọc.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+<script>setInterval(() => { if (!document.activeElement.matches('input,select,textarea')) location.reload(); }, 60000);</script>

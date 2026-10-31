@@ -1,0 +1,18 @@
+{% macro badge_tt(tt) -%}
+  {% if tt == 'cho_xu_ly' %}<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ xử lý</span>
+  {% elif tt == 'dang_xu_ly' %}<span class="badge bg-primary"><i class="bi bi-arrow-repeat me-1"></i>Đang xử lý</span>
+  {% else %}<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Đã giải quyết</span>{% endif %}
+{%- endmacro %}
+
+{% macro badge_uu(uu) -%}
+  {% if uu == 'cao' %}<span class="badge bg-danger">Cao</span>
+  {% elif uu == 'thap' %}<span class="badge bg-secondary">Thấp</span>
+  {% else %}<span class="badge bg-info text-dark">Trung bình</span>{% endif %}
+{%- endmacro %}
+
+{% macro badge_sla(s) -%}
+  {% if not s %}<span class="text-muted">—</span>
+  {% elif s.muc == 'qua_han' %}<span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ s.nhan }}</span>
+  {% elif s.muc == 'sap_het' %}<span class="badge text-white" style="background:#fd7e14"><i class="bi bi-alarm me-1"></i>{{ s.nhan }}</span>
+  {% else %}<span class="badge bg-secondary-subtle text-secondary-emphasis"><i class="bi bi-clock me-1"></i>{{ s.nhan }}</span>{% endif %}
+{%- endmacro %}
