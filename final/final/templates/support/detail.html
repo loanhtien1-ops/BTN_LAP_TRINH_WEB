@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "support/_macros.html" import badge_tt, badge_uu %}
+{% block title %}Yêu cầu #{{ yc.id }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <a class="small text-decoration-none" href="{{ url_for('support.manage') if la_nhan_vien else url_for('support.my_tickets') }}"><i class="bi bi-arrow-left me-1"></i>Quay lại danh sách</a>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-3"><div class="card-body">
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <h4 class="fw-bold mb-0">#{{ yc.id }} · {{ yc.tieu_de }}</h4>
+                    <div>{{ badge_tt(yc.trang_thai) }}{% if la_nhan_vien %} {{ badge_uu(yc.muc_uu_tien) }}{% endif %}</div>
+                </div>
+                <dl class="row small text-muted mt-3 mb-0">
+                    <dt class="col-sm-3">Sinh viên</dt><dd class="col-sm-9">{{ yc.ma_sv }} – {{ yc.ho_ten_sv }} ({{ yc.ma_lop }})</dd>
+                    <dt class="col-sm-3">Loại hỗ trợ</dt><dd class="col-sm-9">{{ yc.ten_loai }}</dd>
+                    <dt class="col-sm-3">Ngày gửi</dt><dd class="col-sm-9">{{ yc.ngay_tao|dmy_gio }}</dd>
+                    <dt class="col-sm-3">Ngày giải quyết</dt><dd class="col-sm-9">{{ yc.ngay_giai_quyet|dmy_gio }}</dd>
+                    <dt class="col-sm-3">Người xử lý</dt><dd class="col-sm-9">{{ yc.ten_nguoi_xu_ly or 'Chưa có' }}</dd>
+                </dl>
+            </div></div>
+
+            <h6 class="fw-bold"><i class="bi bi-chat-left-text me-2"></i>Trao đổi</h6>
+            <div class="p-3 mb-3 rounded border bg-white">
+                <div class="small text-muted mb-1">{{ yc.ho_ten_sv }} · {{ yc.ngay_tao|dmy_gio }}</div>
+                {{ yc.noi_dung|nl2br }}
+            </div>
+            {% for m in messages %}
+            <div class="p-3 mb-3 rounded border {{ 'bg-warning-subtle border-warning' if m.la_noi_bo else ('bg-white' if m.vai_tro == 'student' else 'bg-primary-subtle border-primary-subtle') }}">
+                <div class="small text-muted mb-1">
+                    {{ m.ho_ten }}{% if m.vai_tro != 'student' %} (nhân viên hỗ trợ){% endif %}
+                    {% if m.la_noi_bo %}· <strong>ghi chú nội bộ, sinh viên không thấy</strong>{% endif %}
+                    · {{ m.ngay_tao|dmy_gio }}
+                </div>
+                {{ m.noi_dung|nl2br }}
+            </div>
+            {% else %}
+            <div class="alert alert-secondary py-2 small"><i class="bi bi-clock me-1"></i>Yêu cầu đang chờ nhà trường phản hồi.</div>
+            {% endfor %}
+
+            <form method="post" action="{{ url_for('support.reply', yc_id=yc.id) }}" class="card card-body shadow-sm border-0">
+                <label class="form-label fw-bold" for="nd">{{ 'Phản hồi sinh viên' if la_nhan_vien else 'Trả lời hoặc bổ sung thông tin' }}</label>
+                <textarea class="form-control mb-2" id="nd" name="noi_dung" rows="3" maxlength="5000" required></textarea>
+                {% if la_nhan_vien %}
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="la_noi_bo" id="nb">
+                    <label class="form-check-label" for="nb">Ghi chú nội bộ (sinh viên không xem được)</label>
+                </div>
+                {% endif %}
+                <div><button class="btn btn-primary"><i class="bi bi-send me-1"></i>Gửi</button></div>
+            </form>
+        </div>
+
+        <div class="col-lg-4">
+            {% if la_nhan_vien %}
+            <div class="card shadow-sm border-0 mb-3"><div class="card-body">
+                <h6 class="fw-bold">Cập nhật trạng thái</h6>
+                <form method="post" action="{{ url_for('support.update_status', yc_id=yc.id) }}">
+                    <select class="form-select mb-2" name="trang_thai" aria-label="Trạng thái mới">
+                        {% for v, ten in next_states %}<option value="{{ v }}">{{ 'Mở lại: ' if yc.trang_thai == 'da_giai_quyet' }}{{ ten }}</option>{% endfor %}
+                    </select>
+                    <input class="form-control mb-2" name="ghi_chu" maxlength="255" placeholder="Ghi chú (không bắt buộc)">
+                    <button class="btn btn-success w-100">Cập nhật</button>
+                </form>
+                {% if yc.nguoi_xu_ly_id != g.user.id %}
+                <form method="post" action="{{ url_for('support.assign', yc_id=yc.id) }}" class="mt-2">
+                    <button class="btn btn-outline-secondary btn-sm w-100">Nhận xử lý yêu cầu này</button>
+                </form>
+                {% endif %}
+            </div></div>
+            {% endif %}
+
+            <div class="card shadow-sm border-0"><div class="card-body">
+                <h6 class="fw-bold">Lịch sử trạng thái</h6>
+                <ul class="list-unstyled small mb-0">
+                    {% for h in history %}
+                    <li class="mb-3">
+                        {{ badge_tt(h.trang_thai_moi) }}
+                        <div class="text-muted">{{ h.ngay_thay_doi|dmy_gio }}{% if h.ho_ten %} · {{ h.ho_ten }}{% endif %}</div>
+                        {% if la_nhan_vien and h.ghi_chu %}<div>{{ h.ghi_chu }}</div>{% endif %}
+                    </li>
+                    {% else %}<li class="text-muted">Chưa có thay đổi.</li>{% endfor %}
+                </ul>
+            </div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

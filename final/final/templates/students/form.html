@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import input %}
+{% block title %}{{ 'Thêm sinh viên' if mode == 'create' else 'Sửa hồ sơ sinh viên' }}{% endblock %}
+{% block content %}
+<div class="container my-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">{{ 'Thêm sinh viên mới' if mode == 'create' else 'Sửa hồ sơ sinh viên' }}</h1>
+  <a class="btn btn-outline-secondary"
+     href="{{ url_for('students.list_students') if mode == 'create' else url_for('students.detail', sv_id=sv_id) }}">Hủy</a>
+</div>
+
+{% if not lop_list %}
+<div class="alert alert-warning">
+  Chưa có lớp nào. Hãy <a href="{{ url_for('catalog.lop_list') }}">thêm lớp</a> trước khi tạo sinh viên.
+</div>
+{% endif %}
+
+<form method="post" class="card shadow-sm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card-body p-4">
+    <div class="row g-3">
+      <div class="col-md-4">{{ input('ma_sv', 'Mã sinh viên', data, errors, required=True, placeholder='VD: SV660001', maxlength=15) }}</div>
+      <div class="col-md-8">{{ input('ho_ten', 'Họ và tên', data, errors, required=True, maxlength=100) }}</div>
+
+      <div class="col-md-4">{{ input('ngay_sinh', 'Ngày sinh', data, errors, type='date') }}</div>
+      <div class="col-md-4">
+        <label class="form-label" for="gioi_tinh">Giới tính</label>
+        <select class="form-select {{ 'is-invalid' if errors.get('gioi_tinh') }}" id="gioi_tinh" name="gioi_tinh">
+          <option value="">-- Chọn --</option>
+          {% for g in gioi_tinh_list %}
+          <option value="{{ g }}" {{ 'selected' if data.get('gioi_tinh') == g }}>{{ g }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.get('gioi_tinh') %}<div class="invalid-feedback">{{ errors['gioi_tinh'] }}</div>{% endif %}
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="trang_thai">Trạng thái</label>
+        <select class="form-select {{ 'is-invalid' if errors.get('trang_thai') }}" id="trang_thai" name="trang_thai">
+          {% for t in trang_thai_list %}
+          <option value="{{ t }}" {{ 'selected' if data.get('trang_thai') == t }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.get('trang_thai') %}<div class="invalid-feedback">{{ errors['trang_thai'] }}</div>{% endif %}
+      </div>
+
+      <div class="col-md-6">{{ input('email', 'Email', data, errors, type='email', maxlength=100) }}</div>
+      <div class="col-md-6">{{ input('so_dien_thoai', 'Số điện thoại', data, errors, type='tel', placeholder='0912345678', maxlength=12) }}</div>
+
+      <div class="col-12">{{ input('dia_chi', 'Địa chỉ', data, errors, maxlength=255) }}</div>
+
+      <div class="col-12">
+        <label class="form-label" for="lop_id">Lớp <span class="text-danger">*</span></label>
+        <select class="form-select {{ 'is-invalid' if errors.get('lop_id') }}" id="lop_id" name="lop_id" required>
+          <option value="">-- Chọn lớp --</option>
+          {% for l in lop_list %}
+          <option value="{{ l.id }}" {{ 'selected' if data.get('lop_id')|string == l.id|string }}>
+            {{ l.ma_lop }} — {{ l.ten_nganh }} ({{ l.khoa_hoc }})
+          </option>
+          {% endfor %}
+        </select>
+        {% if errors.get('lop_id') %}<div class="invalid-feedback">{{ errors['lop_id'] }}</div>{% endif %}
+      </div>
+    </div>
+
+    {% if mode == 'create' %}
+    <p class="text-muted small mt-3 mb-0">
+      Hệ thống sẽ tự tạo tài khoản đăng nhập cho sinh viên với tên đăng nhập là mã sinh viên và mật khẩu mặc định <code>123456</code>.
+    </p>
+    {% endif %}
+  </div>
+  <div class="card-footer bg-white p-3 text-end">
+    <button class="btn btn-primary px-4">{{ 'Thêm sinh viên' if mode == 'create' else 'Lưu thay đổi' }}</button>
+  </div>
+</form>
+</div>
+{% endblock %}

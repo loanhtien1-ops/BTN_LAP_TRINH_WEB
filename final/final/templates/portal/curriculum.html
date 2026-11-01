@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Chương trình đào tạo & Điểm tích lũy{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="fw-bold text-primary mb-1">Chương trình đào tạo & Điểm học phần</h3>
+            <p class="text-muted mb-0">Sinh viên: <strong>{{ sv.ho_ten }}</strong> ({{ sv.ma_sv }}) | Ngành: <strong>{{ sv.ten_nganh }}</strong></p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary p-2 fs-6">Đã tích lũy: {{ accumulated_credits }} / {{ total_credits }} Tín chỉ</span>
+        </div>
+    </div>
+
+    <!-- Danh sách theo từng học kỳ -->
+    {% for sem, courses in semesters.items() %}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold fs-6">Học kỳ {{ sem }}</span>
+            <small class="badge bg-light text-primary">Tổng số: {{ courses|length }} học phần</small>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th style="width: 5%;">STT</th>
+                            <th style="width: 12%;">Mã học phần</th>
+                            <th style="width: 30%;">Tên học phần</th>
+                            <th style="width: 8%;">Số TC</th>
+                            <th style="width: 12%;">Loại HP</th>
+                            <th style="width: 8%;">Điểm CC</th>
+                            <th style="width: 8%;">Điểm Thi</th>
+                            <th style="width: 8%;">Tổng kết</th>
+                            <th style="width: 9%;">Kết quả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in courses %}
+                        <tr>
+                            <td class="text-center">{{ loop.index }}</td>
+                            <td class="text-center fw-bold">{{ c.ma_hp }}</td>
+                            <td>{{ c.ten_hp }}</td>
+                            <td class="text-center">{{ c.so_tin_chi }}</td>
+                            <td class="text-center"><span class="badge bg-light text-dark border">{{ c.loai_hp }}</span></td>
+                            <td class="text-center">{{ c.diem_chuyen_can if c.diem_chuyen_can is not none else '—' }}</td>
+                            <td class="text-center">{{ c.diem_thi if c.diem_thi is not none else '—' }}</td>
+                            <td class="text-center fw-bold text-primary">{{ c.diem_tong_ket if c.diem_tong_ket is not none else '—' }}</td>
+                            <td class="text-center">
+                                {% if c.trang_thai_hp == 'Đạt' %}
+                                    <span class="badge bg-success">Đạt ({{ c.diem_chu }})</span>
+                                {% elif c.trang_thai_hp == 'Học lại' %}
+                                    <span class="badge bg-danger">Học lại</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Chưa học</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

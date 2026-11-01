@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Chỉ tiêu {{ ct.ma }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h1 class="h3 fw-bold mb-1">{{ ct.ma }}: {{ ct.ten }}</h1>
+            <span class="badge text-bg-{{ mau[ct.trang_thai] }}">{{ ten_tt[ct.trang_thai] }}</span>
+            <span class="text-muted small ms-2">Phiên bản {{ ct.phien_ban }}, cập nhật {{ ct.ngay_cap_nhat|dmy_gio }}</span>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('dashboard.chi_tieu_list') }}">Về danh mục chỉ tiêu</a>
+    </div>
+
+    <!-- Quy trình thật sự theo thứ tự: nháp, xác nhận nguồn, kiểm tra, công bố -->
+    <ol class="list-group list-group-horizontal-md mb-4 shadow-sm">
+        {% for b in buoc %}
+        <li class="list-group-item flex-fill {{ 'active' if b == ct.trang_thai else '' }}">{{ loop.index }}. {{ ten_tt[b] }}</li>
+        {% endfor %}
+    </ol>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7"><div class="card h-100 shadow-sm"><div class="card-body">
+            <h2 class="h6 fw-bold">Định nghĩa</h2>
+            <dl class="mb-0">
+                {% for k in nhan %}
+                <dt class="small text-muted fw-normal">{{ nhan[k] }}</dt>
+                <dd>{{ ct[k] or '—' }}</dd>
+                {% endfor %}
+                <dt class="small text-muted fw-normal">Đối tượng xem</dt>
+                <dd class="mb-0">{{ 'Quản trị viên' if ct.vai_tro_xem == 'admin' else 'Quản trị viên và nhân viên hỗ trợ' }}</dd>
+            </dl>
+        </div></div></div>
+
+        {% if la_admin %}
+        <div class="col-lg-5"><div class="card h-100 shadow-sm"><div class="card-body">
+            <h2 class="h6 fw-bold">Thao tác quy trình</h2>
+            {% if ct.trang_thai in cho_phep.xac_nhan_nguon %}
+            <form method="post" action="{{ url_for('dashboard.chi_tieu_chuyen', ma=ct.ma) }}" class="mb-3">
+                <input type="hidden" name="csrf" value="{{ dash_csrf }}"><input type="hidden" name="hanh_dong" value="xac_nhan_nguon">
+                <label class="form-label small">Ghi chú (không bắt buộc)</label>
+                <input class="form-control form-control-sm mb-2" name="can_cu" placeholder="Ví dụ: đã đối chiếu bảng YeuCauHoTro">
+                <button class="btn btn-primary btn-sm">Xác nhận nguồn dữ liệu</button>
+            </form>
+            {% endif %}
+            {% if ct.trang_thai in cho_phep.kiem_tra %}
+            <form method="post" action="{{ url_for('dashboard.chi_tieu_chuyen', ma=ct.ma) }}" class="mb-3">
+                <input type="hidden" name="csrf" value="{{ dash_csrf }}"><input type="hidden" name="hanh_dong" value="kiem_tra">
+                <label class="form-label small">Ghi chú kiểm tra (không bắt buộc)</label>
+                <input class="form-control form-control-sm mb-2" name="can_cu" placeholder="Ví dụ: đã so sánh với số đếm tay">
+                <button class="btn btn-primary btn-sm">Xác nhận đã kiểm tra</button>
+            </form>
+            {% endif %}
+            {% if ct.trang_thai in cho_phep.cong_bo %}
+            <form method="post" action="{{ url_for('dashboard.chi_tieu_chuyen', ma=ct.ma) }}" class="mb-3">
+                <input type="hidden" name="csrf" value="{{ dash_csrf }}"><input type="hidden" name="hanh_dong" value="cong_bo">
+                {% if ct.ma != 'SV01' %}
+                <div class="row g-2 mb-2">
+                    <div class="col"><label class="form-label small">Kỳ từ ngày</label><input type="date" class="form-control form-control-sm" name="tu_ngay"></div>
+                    <div class="col"><label class="form-label small">Kỳ đến ngày</label><input type="date" class="form-control form-control-sm" name="den_ngay"></div>
+                </div>
+                {% else %}<p class="small text-muted">Chỉ tiêu này tính trên toàn bộ hồ sơ, không có kỳ.</p>{% endif %}
+                <input class="form-control form-control-sm mb-2" name="can_cu" placeholder="Ghi chú công bố (không bắt buộc)">
+                <button class="btn btn-success btn-sm">Công bố kết quả</button>
+            </form>
+            {% endif %}
+            {% if ct.trang_thai in cho_phep.tra_ve %}
+            <form method="post" action="{{ url_for('dashboard.chi_tieu_chuyen', ma=ct.ma) }}">
+                <input type="hidden" name="csrf" value="{{ dash_csrf }}"><input type="hidden" name="hanh_dong" value="tra_ve">
+                <label class="form-label small">Lý do trả về nháp (bắt buộc)</label>
+                <input class="form-control form-control-sm mb-2" name="can_cu" required>
+                <button class="btn btn-outline-danger btn-sm">Trả về nháp</button>
+            </form>
+            {% endif %}
+        </div></div></div>
+        {% endif %}
+    </div>
+
+    {% if la_admin %}
+    <div class="card shadow-sm mb-4"><div class="card-body">
+        <h2 class="h6 fw-bold">Sửa định nghĩa</h2>
+        <p class="small text-muted">Mỗi lần sửa tạo phiên bản mới, chỉ tiêu quay về Nháp và phải xác nhận, kiểm tra lại. Cách tính thực tế nằm trong code (dashboard.py), nên nếu đổi công thức thì phải sửa code tương ứng.</p>
+        <form method="post" action="{{ url_for('dashboard.chi_tieu_sua', ma=ct.ma) }}">
+            <input type="hidden" name="csrf" value="{{ dash_csrf }}">
+            <div class="row g-2">
+                {% for k in nhan %}
+                <div class="col-md-6">
+                    <label class="form-label small">{{ nhan[k] }}</label>
+                    <input class="form-control form-control-sm" name="{{ k }}" value="{{ ct[k] or '' }}">
+                </div>
+                {% endfor %}
+                <div class="col-12">
+                    <label class="form-label small">Căn cứ điều chỉnh (bắt buộc)</label>
+                    <input class="form-control form-control-sm" name="can_cu" required placeholder="Vì sao sửa, dựa trên văn bản hoặc quyết định nào">
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm mt-3">Lưu phiên bản mới</button>
+        </form>
+    </div></div>
+    {% endif %}
+
+    <h2 class="h5 fw-bold">Kết quả đã công bố</h2>
+    <div class="card shadow-sm mb-4"><div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead class="table-light"><tr><th>Kỳ</th><th>Giá trị</th><th>Phiên bản</th><th>Chiều</th><th>Thời điểm tính</th><th>Người công bố</th></tr></thead>
+            <tbody>
+            {% for k in ket_qua %}
+                <tr>
+                    <td>{% if k.ky_tu or k.ky_den %}{{ k.ky_tu|dmy if k.ky_tu else 'đầu' }} đến {{ k.ky_den|dmy if k.ky_den else 'nay' }}{% else %}Không lọc theo kỳ{% endif %}</td>
+                    <td class="fw-bold">{{ k.gia_tri if k.gia_tri is not none else 'Không có dữ liệu' }} {{ ct.don_vi if k.gia_tri is not none }}</td>
+                    <td>{{ k.phien_ban }}</td><td>Toàn hệ thống</td>
+                    <td>{{ k.thoi_diem_tinh|dmy_gio }}</td><td>{{ k.ho_ten or '—' }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-muted">Chưa có kết quả nào được công bố.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div></div>
+
+    <h2 class="h5 fw-bold">Lịch sử thay đổi</h2>
+    <div class="card shadow-sm"><div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead class="table-light"><tr><th>Thời điểm</th><th>Hành động</th><th>Phiên bản</th><th>Trạng thái</th><th>Người thực hiện</th><th>Căn cứ</th></tr></thead>
+            <tbody>
+            {% for h in lich_su %}
+                <tr>
+                    <td>{{ h.ngay_thuc_hien|dmy_gio }}</td>
+                    <td>{{ ten_hd.get(h.hanh_dong, h.hanh_dong) }}</td>
+                    <td>{{ h.phien_ban }}</td>
+                    <td class="small">{{ ten_tt.get(h.trang_thai_cu, '—') if h.trang_thai_cu else '—' }} → {{ ten_tt.get(h.trang_thai_moi, '—') }}</td>
+                    <td>{{ h.ho_ten or 'Hệ thống' }}</td>
+                    <td class="small">{{ h.can_cu or '—' }}
+                        {% if h.truoc %}
+                        <details class="mt-1"><summary>Nội dung trước khi sửa</summary>
+                            {% for k, v in h.truoc.items() %}<div><span class="text-muted">{{ nhan.get(k, k) }}:</span> {{ v or '—' }}</div>{% endfor %}
+                        </details>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div></div>
+</div>
+{% endblock %}

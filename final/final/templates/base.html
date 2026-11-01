@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cổng Thông Tin Người Học{% endblock %} - Đại Học Kinh Tế Quốc Dân</title>
+    <!-- Bootstrap 5 CSS & Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            background-color: #f4f6f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        :root { --neu-blue: #0d3ba8; --neu-blue-dark: #0a2d85; }
+        .navbar-neu { background-color: var(--neu-blue); }
+        .navbar-neu .navbar-nav .nav-link {
+            font-weight: 500;
+            color: #cfe0ff;
+            border-radius: 6px;
+            margin: 0 2px;
+            padding: 0.5rem 0.75rem;
+            transition: background-color .2s ease, color .2s ease;
+        }
+        .navbar-neu .navbar-nav .nav-link:hover,
+        .navbar-neu .navbar-nav .nav-link:focus {
+            color: #fff;
+            background-color: rgba(255, 255, 255, .18);
+        }
+        .navbar-neu .navbar-nav .nav-link.active {
+            color: #ffeb3b !important;
+            background-color: var(--neu-blue-dark);
+        }
+        .navbar-neu .dropdown-menu .dropdown-item:hover { background-color: #e3ecff; }
+        .card { border-radius: 8px; }
+        main {
+            flex: 1 0 auto; /* Đẩy footer luôn bám sát đáy màn hình */
+        }
+        footer {
+            flex-shrink: 0;
+        }
+
+        /* Cách lề hai bên cho mọi trang chưa có container */
+        main > *:not(.container):not(.container-fluid):not(.modal):not(script):not(style) {
+            width: calc(100% - 24px);
+            max-width: 1296px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        main > :first-child:not(.container):not(.container-fluid):not(.modal) { margin-top: 1.5rem; }
+        main > :last-child:not(.container):not(.container-fluid):not(.modal) { margin-bottom: 1.5rem; }
+
+        /* Hover cho dòng trong bảng */
+        .table-hover { --bs-table-hover-bg: #dbe7ff; }
+
+        /* Bốn ô thống kê có màu, icon và hover */
+        .card.stat-card {
+            position: relative; overflow: hidden; border: 0; color: #1f2d3d;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .card.stat-card:hover { transform: translateY(-4px); box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.18) !important; }
+        .card.stat-card .stat-icon {
+            position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+            font-size: 2.6rem; opacity: .75;
+        }
+        .stat-total    { background: linear-gradient(135deg, #dbe4f7, #bcd0f5) !important; }
+        .stat-pending  { background: linear-gradient(135deg, #ffe082, #ffca28) !important; }
+        .stat-progress { background: linear-gradient(135deg, #b3e5fc, #4fc3f7) !important; }
+        .stat-done     { background: linear-gradient(135deg, #c8e6c9, #66bb6a) !important; }
+        .stat-total .stat-icon { color: #1e56d6; }
+        .stat-pending .stat-icon { color: #b26a00; }
+        .stat-progress .stat-icon { color: #0b6fa4; }
+        .stat-done .stat-icon { color: #1b7a2f; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-neu shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('home') }}">
+                <i class="bi bi-mortarboard-fill me-2 fs-4 text-warning"></i> CỔNG NGƯỜI HỌC
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    {% set ep = request.endpoint or '' %}
+                    {% if g.user %}
+                        {% if g.user.vai_tro == 'student' %}
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep == 'portal.profile' }}" href="{{ url_for('portal.profile') }}"><i class="bi bi-person-circle me-1"></i>Hồ sơ cá nhân</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep == 'portal.curriculum' }}" href="{{ url_for('portal.curriculum') }}"><i class="bi bi-journal-text me-1"></i>Chương trình đào tạo</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep == 'portal.finance' }}" href="{{ url_for('portal.finance') }}"><i class="bi bi-credit-card me-1"></i>Tài chính sinh viên</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep.startswith('support.') }}" href="{{ url_for('support.my_tickets') }}"><i class="bi bi-headset me-1"></i>Hỗ trợ & Thắc mắc</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep.startswith('students.') }}" href="{{ url_for('students.list_students') }}"><i class="bi bi-people-fill me-1"></i>Quản lý sinh viên</a>
+                            </li>
+                            {% if g.user.vai_tro == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep.startswith('catalog.nganh') }}" href="{{ url_for('catalog.nganh_list') }}"><i class="bi bi-diagram-3 me-1"></i>Ngành học</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep.startswith('catalog.lop') }}" href="{{ url_for('catalog.lop_list') }}"><i class="bi bi-building me-1"></i>Lớp & Khóa</a>
+                            </li>
+                            {% endif %}
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep.startswith('support.') }}" href="{{ url_for('support.manage') }}"><i class="bi bi-chat-left-dots-fill me-1"></i>Xử lý hỗ trợ SV</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if ep.startswith('dashboard.') }}" href="{{ url_for('dashboard.index') }}"><i class="bi bi-bar-chart-line-fill me-1"></i>Dashboard báo cáo</a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                <ul class="navbar-nav ms-auto">
+                    {% if g.user %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white fw-bold" href="#" id="userDrop" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1 text-warning"></i>
+                                {% if g.user.vai_tro == 'student' %}
+                                    {{ g.user.ho_ten }}
+                                {% elif g.user.vai_tro == 'admin' %}
+                                    Admin ({{ g.user.username }})
+                                {% else %}
+                                    Nhân viên hỗ trợ ({{ g.user.username }})
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li>
+                                    <span class="dropdown-item-text text-muted small">
+                                        Vai trò: 
+                                        <strong>
+                                            {% if g.user.vai_tro == 'admin' %}
+                                                Admin
+                                            {% elif g.user.vai_tro == 'support_staff' %}
+                                                Nhân viên hỗ trợ
+                                            {% else %}
+                                                Sinh viên
+                                            {% endif %}
+                                        </strong>
+                                    </span>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('portal.change_password') }}">
+                                        <i class="bi bi-key me-1"></i>Đổi mật khẩu
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-1"></i>Đăng xuất</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Đăng nhập</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- MAIN CHỨA NỘI DUNG TỰ ĐỘNG GIÃN NỞ ĐẨY FOOTER XUỐNG ĐÁY MÀN HÌNH -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER LUÔN NẰM Ở ĐÁY MÀN HÌNH BẤT KỂ NỘI DUNG NHIỀU HAY ÍT -->
+    <footer class="text-center py-3 text-muted border-top bg-white mt-auto">
+        <div class="container">
+            <small>© 2026 Hệ thống Quản lý Sinh viên & Hỗ trợ Người học. Đại học Kinh tế Quốc dân.</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var map = {
+        'tổng yêu cầu':  ['stat-total',    'bi-folder2-open'],
+        'chờ xử lý':     ['stat-pending',  'bi-bell-fill'],
+        'đang xử lý':    ['stat-progress', 'bi-gear-fill'],
+        'đã giải quyết': ['stat-done',     'bi-check-circle-fill']
+      };
+      document.querySelectorAll('main .card').forEach(function (card) {
+        var text = card.textContent.trim().toLowerCase();
+        if (text.length > 60) return;
+        Object.keys(map).forEach(function (key) {
+          if (text.indexOf(key) === 0) {
+            card.classList.add('stat-card', map[key][0]);
+            card.insertAdjacentHTML('beforeend', '<i class="bi ' + map[key][1] + ' stat-icon"></i>');
+          }
+        });
+      });
+    });
+    </script>
+</body>
+</html>

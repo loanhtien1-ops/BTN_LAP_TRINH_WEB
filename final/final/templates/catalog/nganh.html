@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Ngành học{% endblock %}
+{% block content %}
+<div class="container my-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Quản lý ngành học</h1>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#catalogModal" data-title="Thêm ngành học">+ Thêm ngành</button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Mã ngành</th><th>Tên ngành</th><th class="text-center">Số lớp</th><th class="text-center">Số sinh viên</th><th class="text-end">Thao tác</th></tr>
+      </thead>
+      <tbody>
+        {% for n in nganh_list %}
+        <tr>
+          <td class="fw-semibold">{{ n.ma_nganh }}</td>
+          <td>{{ n.ten_nganh }}</td>
+          <td class="text-center"><a href="{{ url_for('catalog.lop_list') }}">{{ n.so_lop }}</a></td>
+          <td class="text-center"><a href="{{ url_for('students.list_students', nganh_id=n.id) }}">{{ n.so_sv }}</a></td>
+          <td class="text-end text-nowrap">
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#catalogModal"
+                    data-title="Sửa ngành học"
+                    data-fill='{{ {"id": n.id, "ma_nganh": n.ma_nganh, "ten_nganh": n.ten_nganh}|tojson }}'>Sửa</button>
+            <form method="post" action="{{ url_for('catalog.nganh_delete', nganh_id=n.id) }}" class="d-inline"
+                  data-confirm="Xóa ngành {{ n.ten_nganh }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-5">Chưa có ngành học nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="catalogModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('catalog.nganh_save') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="id">
+      <div class="modal-header">
+        <h2 class="modal-title h5" data-modal-title></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label" for="ma_nganh">Mã ngành <span class="text-danger">*</span></label>
+          <input class="form-control" id="ma_nganh" name="ma_nganh" maxlength="15" required placeholder="VD: CNTT">
+        </div>
+        <div>
+          <label class="form-label" for="ten_nganh">Tên ngành <span class="text-danger">*</span></label>
+          <input class="form-control" id="ten_nganh" name="ten_nganh" maxlength="100" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn btn-primary">Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+</div>
+{% endblock %}

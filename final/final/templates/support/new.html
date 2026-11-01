@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Gửi yêu cầu hỗ trợ{% endblock %}
+{% block content %}
+<div class="container my-4" style="max-width: 820px;">
+    <a class="small text-decoration-none" href="{{ url_for('support.my_tickets') }}"><i class="bi bi-arrow-left me-1"></i>Quay lại danh sách</a>
+    <h3 class="fw-bold text-primary my-3"><i class="bi bi-envelope-plus me-2"></i>Gửi yêu cầu hỗ trợ</h3>
+
+    <form method="post" class="card shadow-sm border-0 p-4" novalidate>
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="form-label fw-bold" for="loai">Loại hỗ trợ <span class="text-danger">*</span></label>
+                <select class="form-select {{ 'is-invalid' if errors.loai_ho_tro_id }}" id="loai" name="loai_ho_tro_id" required>
+                    <option value="">— Chọn loại —</option>
+                    {% for l in loai_list %}
+                    <option value="{{ l.id }}" {{ 'selected' if data.loai_ho_tro_id|string == l.id|string }}>{{ l.ten_loai }}</option>
+                    {% endfor %}
+                </select>
+                {% if errors.loai_ho_tro_id %}<div class="invalid-feedback">{{ errors.loai_ho_tro_id }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold" for="td">Tiêu đề <span class="text-danger">*</span></label>
+                <input class="form-control {{ 'is-invalid' if errors.tieu_de }}" id="td" name="tieu_de" maxlength="200"
+                       value="{{ data.tieu_de or '' }}" placeholder="Ví dụ: Xin xác nhận bảng điểm học kỳ 1" required>
+                {% if errors.tieu_de %}<div class="invalid-feedback">{{ errors.tieu_de }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold" for="nd">Nội dung chi tiết <span class="text-danger">*</span></label>
+                <textarea class="form-control {{ 'is-invalid' if errors.noi_dung }}" id="nd" name="noi_dung" rows="6"
+                          maxlength="5000" required>{{ data.noi_dung or '' }}</textarea>
+                {% if errors.noi_dung %}<div class="invalid-feedback">{{ errors.noi_dung }}</div>{% endif %}
+                <div class="form-text">Mô tả rõ vấn đề của bạn. Không nhập mật khẩu hoặc thông tin ngân hàng.</div>
+            </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary"><i class="bi bi-send me-1"></i>Gửi yêu cầu</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('support.my_tickets') }}">Hủy</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
