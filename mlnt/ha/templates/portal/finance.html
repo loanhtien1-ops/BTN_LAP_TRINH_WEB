@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Tài chính sinh viên - Học phí{% endblock %}
+{% block content %}
+<div class="container my-4">
+    <div class="mb-4">
+        <h3 class="fw-bold text-primary mb-1">Tài chính sinh viên & Công nợ học phí</h3>
+        <p class="text-muted">Theo dõi nghĩa vụ nộp học phí, các khoản thu học kỳ và lịch sử giao dịch trực tuyến.</p>
+    </div>
+
+    <!-- Thống kê tổng hợp -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-primary text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Tổng tiền phải nộp</div>
+                        <h4 class="fw-bold mb-0">{{ "{:,}".format(tong_phai_nop) }} VNĐ</h4>
+                    </div>
+                    <i class="bi bi-wallet2 fs-1 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-success text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Đã thanh toán</div>
+                        <h4 class="fw-bold mb-0">{{ "{:,}".format(tong_da_nop) }} VNĐ</h4>
+                    </div>
+                    <i class="bi bi-check-circle-fill fs-1 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-danger text-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-white-50 small">Công nợ hiện tại</div>
+                        <h4 class="fw-bold mb-0">{{ "{:,}".format(cong_no) }} VNĐ</h4>
+                    </div>
+                    <i class="bi bi-exclamation-octagon-fill fs-1 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chi tiết từng kỳ -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title fw-bold text-dark mb-0">Chi tiết học phí các học kỳ</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th>Học kỳ</th>
+                            <th>Nội dung thu</th>
+                            <th>Hạn nộp</th>
+                            <th>Số tiền phải nộp</th>
+                            <th>Đã thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>Thời gian giao dịch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in records %}
+                        <tr>
+                            <td class="fw-bold text-center">{{ r.hoc_ky }}</td>
+                            <td>{{ r.noi_dung }}</td>
+                            <td class="text-center text-danger">{{ r.han_nop|dmy }}</td>
+                            <td class="text-end fw-bold text-primary">{{ "{:,}".format(r.so_tien_phai_nop) }} đ</td>
+                            <td class="text-end text-success">{{ "{:,}".format(r.so_tien_da_nop) }} đ</td>
+                            <td class="text-center">
+                                {% if r.trang_thai_nop == 'Đã nộp đủ' %}
+                                    <span class="badge bg-success">Đã nộp đủ</span>
+                                {% elif r.trang_thai_nop == 'Nộp một phần' %}
+                                    <span class="badge bg-warning text-dark">Nộp một phần</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Chưa nộp</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center small text-muted">{{ r.ngay_giao_dich or '—' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center py-3">Chưa có thông tin học phí.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

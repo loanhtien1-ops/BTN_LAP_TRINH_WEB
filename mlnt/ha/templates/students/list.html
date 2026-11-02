@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, pagination with context %}
+{% block title %}Danh sách sinh viên{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-0">Danh sách sinh viên</h1>
+    <div class="text-muted small">Tìm thấy {{ total }} sinh viên</div>
+  </div>
+  {% if current_user.vai_tro == 'admin' %}
+  <a class="btn btn-primary" href="{{ url_for('students.create') }}">+ Thêm sinh viên</a>
+  {% endif %}
+</div>
+
+<form method="get" class="card card-body shadow-sm mb-3">
+  <div class="row g-2 align-items-end">
+    <div class="col-lg-3">
+      <label class="form-label small mb-1" for="q">Tìm kiếm</label>
+      <input type="search" id="q" name="q" class="form-control" placeholder="Mã SV, họ tên hoặc lớp…"
+             value="{{ f.get('q', '') }}">
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="f-nganh">Ngành</label>
+      <select class="form-select" id="f-nganh" name="nganh_id" data-autosubmit data-reset-target="#f-lop">
+        <option value="">Tất cả</option>
+        {% for n in nganh_list %}
+        <option value="{{ n.id }}" {{ 'selected' if f.get('nganh_id', '') == n.id|string }}>{{ n.ma_nganh }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="f-lop">Lớp</label>
+      <select class="form-select" id="f-lop" name="lop_id" data-autosubmit>
+        <option value="">Tất cả</option>
+        {% for l in lop_list %}
+        <option value="{{ l.id }}" {{ 'selected' if f.get('lop_id', '') == l.id|string }}>{{ l.ma_lop }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="f-khoa">Khóa</label>
+      <select class="form-select" id="f-khoa" name="khoa_hoc" data-autosubmit>
+        <option value="">Tất cả</option>
+        {% for k in khoa_list %}
+        <option value="{{ k.khoa_hoc }}" {{ 'selected' if f.get('khoa_hoc', '') == k.khoa_hoc }}>{{ k.khoa_hoc }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small mb-1" for="f-tt">Trạng thái</label>
+      <select class="form-select" id="f-tt" name="trang_thai" data-autosubmit>
+        <option value="">Tất cả</option>
+        {% for t in trang_thai_list %}
+        <option value="{{ t }}" {{ 'selected' if f.get('trang_thai', '') == t }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-1 d-grid">
+      <button class="btn btn-primary">Lọc</button>
+    </div>
+  </div>
+  {% if f.get('q') or f.get('nganh_id') or f.get('lop_id') or f.get('khoa_hoc') or f.get('trang_thai') %}
+  <div class="mt-2"><a class="small" href="{{ url_for('students.list_students') }}">Xóa bộ lọc</a></div>
+  {% endif %}
+</form>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Mã SV</th><th>Họ tên</th><th>Ngày sinh</th><th>Giới tính</th>
+          <th>Lớp</th><th>Ngành</th><th>Khóa</th><th>Trạng thái</th><th class="text-end">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td class="fw-semibold">{{ s.ma_sv }}</td>
+          <td><a class="text-decoration-none" href="{{ url_for('students.detail', sv_id=s.id) }}">{{ s.ho_ten }}</a></td>
+          <td>{{ s.ngay_sinh|dmy }}</td>
+          <td>{{ s.gioi_tinh or '—' }}</td>
+          <td>{{ s.ma_lop }}</td>
+          <td>{{ s.ma_nganh }}</td>
+          <td>{{ s.khoa_hoc }}</td>
+          <td>{{ status_badge(s.trang_thai) }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('students.detail', sv_id=s.id) }}">Xem</a>
+            {% if current_user.vai_tro == 'admin' %}
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('students.edit', sv_id=s.id) }}">Sửa</a>
+            <form method="post" action="{{ url_for('students.delete', sv_id=s.id) }}" class="d-inline"
+                  data-confirm="Xóa sinh viên {{ s.ho_ten }} ({{ s.ma_sv }})? Thao tác này không thể hoàn tác.">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9" class="text-center text-muted py-5">Không có sinh viên nào phù hợp.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pages > 1 %}
+  <div class="card-footer bg-white py-3">{{ pagination('students.list_students', page, pages) }}</div>
+  {% endif %}
+</div>
+{% endblock %}

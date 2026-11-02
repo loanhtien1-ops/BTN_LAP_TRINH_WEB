@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Danh mục chỉ tiêu{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Danh mục chỉ tiêu</h1>
+            <p class="text-muted mb-0">Mọi con số trên dashboard lấy từ các chỉ tiêu này. Chỉ số nội bộ, không đồng nhất với HEDI; chưa có công thức chính thức cho HEDI H10.</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('dashboard.index') }}">Quay lại dashboard</a>
+    </div>
+
+    <div class="card shadow-sm"><div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light"><tr>
+                <th>Mã</th><th>Chỉ tiêu</th><th>Đầu mối dữ liệu</th><th>Nguồn</th><th>Phiên bản</th><th>Trạng thái</th><th>Kết quả công bố gần nhất</th>
+            </tr></thead>
+            <tbody>
+            {% for c in chi_tieu %}
+                {% set kq = moi_nhat.get(c.id) %}
+                <tr>
+                    <td class="fw-bold"><a href="{{ url_for('dashboard.chi_tieu_detail', ma=c.ma) }}">{{ c.ma }}</a></td>
+                    <td>{{ c.ten }}<div class="small text-muted">{{ c.don_vi }}</div></td>
+                    <td>{{ c.dau_moi }}</td>
+                    <td class="small">{{ c.nguon }}</td>
+                    <td>{{ c.phien_ban }}</td>
+                    <td><span class="badge text-bg-{{ mau[c.trang_thai] }}">{{ c.ten_trang_thai }}</span></td>
+                    <td class="small">
+                        {% if kq %}
+                            <strong>{{ kq.gia_tri if kq.gia_tri is not none else 'Không có dữ liệu' }}</strong> {{ c.don_vi if kq.gia_tri is not none }}
+                            <div class="text-muted">phiên bản {{ kq.phien_ban }},
+                                {% if kq.ky_tu or kq.ky_den %}kỳ {{ kq.ky_tu|dmy if kq.ky_tu else 'đầu' }} đến {{ kq.ky_den|dmy if kq.ky_den else 'nay' }}{% else %}không lọc theo kỳ{% endif %},
+                                {{ kq.thoi_diem_tinh|dmy_gio }}</div>
+                        {% else %}<span class="text-muted">Chưa công bố</span>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div></div>
+    <p class="small text-muted mt-2">Trạng thái «Chưa công bố» không có nghĩa là số liệu trên dashboard bị ẩn: dashboard luôn tính trực tiếp từ dữ liệu hiện có. Công bố là lưu lại kết quả của một kỳ để truy xuất sau này.</p>
+</div>
+{% endblock %}

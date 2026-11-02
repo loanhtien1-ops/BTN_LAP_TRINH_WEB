@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Lớp và khóa học{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Quản lý lớp và khóa học</h1>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#catalogModal" data-title="Thêm lớp">+ Thêm lớp</button>
+</div>
+
+{% if not nganh_list %}
+<div class="alert alert-warning">Chưa có ngành học nào. Hãy <a href="{{ url_for('catalog.nganh_list') }}">thêm ngành</a> trước khi tạo lớp.</div>
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Mã lớp</th><th>Tên lớp</th><th>Ngành</th><th>Khóa</th><th class="text-center">Số sinh viên</th><th class="text-end">Thao tác</th></tr>
+      </thead>
+      <tbody>
+        {% for l in lop_list %}
+        <tr>
+          <td class="fw-semibold">{{ l.ma_lop }}</td>
+          <td>{{ l.ten_lop }}</td>
+          <td>{{ l.ten_nganh }} <span class="text-muted">({{ l.ma_nganh }})</span></td>
+          <td>{{ l.khoa_hoc }}</td>
+          <td class="text-center"><a href="{{ url_for('students.list_students', lop_id=l.id) }}">{{ l.so_sv }}</a></td>
+          <td class="text-end text-nowrap">
+            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#catalogModal"
+                    data-title="Sửa lớp"
+                    data-fill='{{ {"id": l.id, "ma_lop": l.ma_lop, "ten_lop": l.ten_lop, "nganh_id": l.nganh_id, "khoa_hoc": l.khoa_hoc}|tojson }}'>Sửa</button>
+            <form method="post" action="{{ url_for('catalog.lop_delete', lop_id=l.id) }}" class="d-inline"
+                  data-confirm="Xóa lớp {{ l.ma_lop }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-5">Chưa có lớp nào.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="catalogModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('catalog.lop_save') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="id">
+      <div class="modal-header">
+        <h2 class="modal-title h5" data-modal-title></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="ma_lop">Mã lớp <span class="text-danger">*</span></label>
+            <input class="form-control" id="ma_lop" name="ma_lop" maxlength="20" required placeholder="VD: CNTT66A">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="khoa_hoc">Khóa học <span class="text-danger">*</span></label>
+            <input class="form-control" id="khoa_hoc" name="khoa_hoc" maxlength="20" required placeholder="VD: K66">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="ten_lop">Tên lớp <span class="text-danger">*</span></label>
+            <input class="form-control" id="ten_lop" name="ten_lop" maxlength="100" required>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="nganh_id">Ngành học <span class="text-danger">*</span></label>
+            <select class="form-select" id="nganh_id" name="nganh_id" required>
+              <option value="">-- Chọn ngành --</option>
+              {% for n in nganh_list %}
+              <option value="{{ n.id }}">{{ n.ma_nganh }} — {{ n.ten_nganh }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn btn-primary">Lưu</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

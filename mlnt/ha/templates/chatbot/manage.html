@@ -1,0 +1,122 @@
+
+{% extends "base.html" %}
+{% block title %}Quản lý FAQ{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+    <h3 class="fw-bold text-primary mb-4">
+        <i class="bi bi-robot me-2"></i>Quản lý kho câu hỏi FAQ
+    </h3>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Thêm câu hỏi mới</h5>
+
+            <form method="post" action="{{ url_for('chatbot.create') }}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Câu hỏi</label>
+                    <input name="cau_hoi" class="form-control"
+                           placeholder="Nhập câu hỏi mẫu" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Câu trả lời</label>
+                    <textarea name="cau_tra_loi" class="form-control"
+                              rows="4" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Từ khóa</label>
+                    <input name="tu_khoa" class="form-control"
+                           placeholder="Ví dụ: học phí; đóng học phí; hạn nộp"
+                           required>
+                    <div class="form-text">
+                        Phân cách các từ khóa bằng dấu chấm phẩy (;).
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="can_chuyen_nhan_vien"
+                           id="chuyen">
+                    <label class="form-check-label" for="chuyen">
+                        Bắt buộc chuyển nhân viên, không trả lời tự động
+                    </label>
+                </div>
+
+                <button class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Thêm FAQ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Danh sách FAQ</h5>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Câu hỏi</th>
+                            <th>Từ khóa</th>
+                            <th>Trạng thái</th>
+                            <th>Chuyển nhân viên</th>
+                            {% if g.user.vai_tro == 'admin' %}
+                            <th>Thao tác</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for f in faqs %}
+                        <tr>
+                            <td>{{ f.id }}</td>
+                            <td>{{ f.cau_hoi }}</td>
+                            <td>{{ f.tu_khoa }}</td>
+                            <td>
+                                {% if f.trang_thai == 'da_duyet' %}
+                                    <span class="badge bg-success">Đã duyệt</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ 'Có' if f.can_chuyen_nhan_vien else 'Không' }}
+                            </td>
+
+                            {% if g.user.vai_tro == 'admin' %}
+                            <td>
+                                {% if f.trang_thai == 'cho_duyet' %}
+                                <form method="post"
+                                      action="{{ url_for('chatbot.approve', faq_id=f.id) }}">
+                                    <button class="btn btn-sm btn-success">
+                                        Duyệt
+                                    </button>
+                                </form>
+                                {% else %}
+                                    <span class="text-muted small">Hoàn tất</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                Chưa có dữ liệu FAQ.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

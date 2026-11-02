@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}{{ sv.ho_ten }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">Hồ sơ sinh viên</h1>
+  <div class="d-flex gap-2">
+    {% if current_user.vai_tro != 'student' %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('students.list_students') }}">← Danh sách</a>
+    {% endif %}
+    {% if current_user.vai_tro == 'admin' %}
+    <a class="btn btn-primary" href="{{ url_for('students.edit', sv_id=sv.id) }}">Sửa</a>
+    <form method="post" action="{{ url_for('students.delete', sv_id=sv.id) }}"
+          data-confirm="Xóa sinh viên {{ sv.ho_ten }} ({{ sv.ma_sv }})? Thao tác này không thể hoàn tác.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-danger">Xóa</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <div class="avatar">{{ sv.ho_ten.split()[-1][0] }}</div>
+      <div>
+        <div class="h5 mb-1">{{ sv.ho_ten }}</div>
+        <div class="text-muted">{{ sv.ma_sv }} · {{ sv.ma_lop }}</div>
+      </div>
+      <div class="ms-auto">{{ status_badge(sv.trang_thai) }}</div>
+    </div>
+
+    <dl class="row mb-0 detail-list">
+      <dt class="col-sm-3">Ngày sinh</dt><dd class="col-sm-9">{{ sv.ngay_sinh|dmy }}</dd>
+      <dt class="col-sm-3">Giới tính</dt><dd class="col-sm-9">{{ sv.gioi_tinh or '—' }}</dd>
+      <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ sv.email or '—' }}</dd>
+      <dt class="col-sm-3">Số điện thoại</dt><dd class="col-sm-9">{{ sv.so_dien_thoai or '—' }}</dd>
+      <dt class="col-sm-3">Địa chỉ</dt><dd class="col-sm-9">{{ sv.dia_chi or '—' }}</dd>
+      <dt class="col-sm-3">Lớp</dt><dd class="col-sm-9">{{ sv.ten_lop }} ({{ sv.ma_lop }})</dd>
+      <dt class="col-sm-3">Ngành</dt><dd class="col-sm-9">{{ sv.ten_nganh }} ({{ sv.ma_nganh }})</dd>
+      <dt class="col-sm-3">Khóa học</dt><dd class="col-sm-9">{{ sv.khoa_hoc }}</dd>
+      <dt class="col-sm-3">Ngày tạo hồ sơ</dt><dd class="col-sm-9">{{ sv.ngay_tao }}</dd>
+    </dl>
+  </div>
+</div>
+
+{# M12 (Thảo): có thể thêm khối "Yêu cầu hỗ trợ gần đây" của sinh viên tại đây #}
+{% endblock %}
