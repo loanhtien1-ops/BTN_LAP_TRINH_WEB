@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager, sv_badge, empty %}
+{% block title %}Sinh viên{% endblock %}
+{% block content %}
+{% set admin = current_user['vai_tro'] == 'admin' %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Danh sách <em class="hl">sinh viên</em></h1>
+    <div class="page-sub">{{ total }} hồ sơ phù hợp với bộ lọc hiện tại.</div>
+  </div>
+  <div class="actions">
+    {% if admin %}<a class="btn" href="{{ url_for('students.create') }}"><i class="bi bi-plus-lg"></i> Thêm sinh viên</a>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <form method="get" class="filters">
+    <div class="field grow">
+      <label class="lbl" for="q">Tìm kiếm</label>
+      <div class="searchbox"><i class="bi bi-search"></i>
+        <input class="input" id="q" name="q" value="{{ f.get('q', '') }}" placeholder="Mã, họ tên, lớp (không cần gõ dấu)">
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="nganh_id">Ngành</label>
+      <select class="input" id="nganh_id" name="nganh_id">
+        <option value="">Tất cả</option>
+        {% for n in nganh_list %}<option value="{{ n.id }}" {{ 'selected' if f.get('nganh_id') == n.id|string }}>{{ n.ma_nganh }} – {{ n.ten_nganh }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="lop_id">Lớp</label>
+      <select class="input" id="lop_id" name="lop_id">
+        <option value="">Tất cả</option>
+        {% for l in lop_list %}<option value="{{ l.id }}" {{ 'selected' if f.get('lop_id') == l.id|string }}>{{ l.ma_lop }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="khoa_hoc">Khóa</label>
+      <select class="input" id="khoa_hoc" name="khoa_hoc">
+        <option value="">Tất cả</option>
+        {% for k in khoa_list %}<option value="{{ k.khoa_hoc }}" {{ 'selected' if f.get('khoa_hoc') == k.khoa_hoc }}>{{ k.khoa_hoc }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="trang_thai">Trạng thái</label>
+      <select class="input" id="trang_thai" name="trang_thai">
+        <option value="">Tất cả</option>
+        {% for t in trang_thai_list %}<option value="{{ t }}" {{ 'selected' if f.get('trang_thai') == t }}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit"><i class="bi bi-funnel"></i> Lọc</button>
+      <a class="btn light" href="{{ url_for('students.list_students') }}">Xóa lọc</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Sinh viên</th><th>Lớp</th><th>Ngành</th><th>Khóa</th><th>Liên hệ</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+      {% for s in students %}
+        <tr>
+          <td><a href="{{ url_for('students.detail', sv_id=s.id) }}"><b>{{ s.ho_ten }}</b></a><span class="sub">{{ s.ma_sv }}</span></td>
+          <td>{{ s.ma_lop }}</td>
+          <td>{{ s.ten_nganh }}</td>
+          <td>{{ s.khoa_hoc }}</td>
+          <td>{{ s.so_dien_thoai or '—' }}<span class="sub">{{ s.email or '' }}</span></td>
+          <td>{{ sv_badge(s.trang_thai) }}</td>
+          <td class="nowrap text-right">
+            <a class="icon-btn" title="Xem" href="{{ url_for('students.detail', sv_id=s.id) }}"><i class="bi bi-eye"></i></a>
+            {% if admin %}
+            <a class="icon-btn" title="Sửa" href="{{ url_for('students.edit', sv_id=s.id) }}"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{{ url_for('students.delete', sv_id=s.id) }}" style="display:inline" data-confirm="Xóa sinh viên {{ s.ho_ten }} ({{ s.ma_sv }})?">
+              <button class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7">{{ empty('Không có sinh viên nào phù hợp.', 'bi-person-x') }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <span class="muted small">Trang {{ page }} / {{ pages }}</span>
+    {{ pager('students.list_students', page, pages, f) }}
+  </div>
+</div>
+{% endblock %}

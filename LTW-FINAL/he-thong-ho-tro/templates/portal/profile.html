@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sv_badge %}
+{% block title %}Hồ sơ của tôi{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Xin chào, <em class="hl">{{ sv.ho_ten.split()[-1] }}</em> 👋</h1>
+    <div class="page-sub">Hồ sơ sinh viên của bạn tại nhà trường.</div>
+  </div>
+  <div class="actions">
+    <a class="btn light" href="{{ url_for('portal.print_profile') }}" target="_blank"><i class="bi bi-printer"></i> In sơ yếu lý lịch</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="serif">{{ sv.ho_ten }}</div>
+  <p>{{ sv.ma_sv }} · {{ sv.ten_nganh }} · Lớp {{ sv.ma_lop }} · Khóa {{ sv.khoa_hoc }}</p>
+</div>
+
+<div class="grid side mt">
+  <div class="card">
+    <div class="card-head"><div class="card-title serif">Thông tin cá nhân</div>{{ sv_badge(sv.trang_thai) }}</div>
+    <dl class="dl">
+      <dt>Mã sinh viên</dt><dd>{{ sv.ma_sv }}</dd>
+      <dt>Họ và tên</dt><dd>{{ sv.ho_ten }}</dd>
+      <dt>Ngày sinh</dt><dd>{{ sv.ngay_sinh|dmy }}</dd>
+      <dt>Giới tính</dt><dd>{{ sv.gioi_tinh or '—' }}</dd>
+      <dt>Ngành</dt><dd>{{ sv.ma_nganh }} – {{ sv.ten_nganh }}</dd>
+      <dt>Lớp</dt><dd>{{ sv.ma_lop }} – {{ sv.ten_lop }}</dd>
+      <dt>Khóa học</dt><dd>{{ sv.khoa_hoc }}</dd>
+    </dl>
+  </div>
+
+  <form class="card" method="post" action="{{ url_for('portal.update_contact') }}">
+    <div class="card-head"><div class="card-title serif">Thông tin liên hệ</div></div>
+    <div class="field">
+      <label class="lbl" for="email">Email trường cấp</label>
+      <input class="input" id="email" value="{{ sv.email or '' }}" readonly>
+      <div class="hint"><i class="bi bi-lock"></i> Chỉ quản trị viên được sửa email.</div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="so_dien_thoai">Số điện thoại</label>
+      <input class="input" id="so_dien_thoai" name="so_dien_thoai" value="{{ sv.so_dien_thoai or '' }}">
+    </div>
+    <div class="field">
+      <label class="lbl" for="dia_chi">Địa chỉ</label>
+      <textarea class="input" id="dia_chi" name="dia_chi" rows="3">{{ sv.dia_chi or '' }}</textarea>
+    </div>
+    <button class="btn block" type="submit">Lưu thay đổi</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Hỏi chatbot{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Hỏi <em class="hl">chatbot</em></h1>
+    <div class="page-sub">Tìm câu trả lời có sẵn ngay. Nếu chưa đủ, bạn có thể gửi yêu cầu đến nhân viên.</div>
+  </div>
+  <div class="actions"><a class="btn light" href="{{ url_for('chatbot.faq_list') }}"><i class="bi bi-question-circle"></i> Xem tất cả FAQ</a></div>
+</div>
+
+<div class="card" style="max-width:820px">
+  <div id="log" class="chat" style="min-height:260px;max-height:460px;overflow:auto;padding-right:6px">
+    <div class="msg staff"><div class="avatar"><i class="bi bi-robot"></i></div>
+      <div class="bubble"><div class="meta"><b>Chatbot</b></div>Xin chào! Bạn muốn hỏi gì về học vụ, học phí, tài khoản hay kỹ thuật?</div></div>
+  </div>
+  {% if goi_y %}
+  <div id="chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+    {% for c in goi_y %}<button type="button" class="btn sm light chip">{{ c }}</button>{% endfor %}
+  </div>
+  {% endif %}
+  <form id="f" class="mt" style="display:flex;gap:10px" autocomplete="off">
+    <input class="input" id="q" maxlength="1000" placeholder="Nhập câu hỏi của bạn…" required>
+    <button class="btn" type="submit"><i class="bi bi-send"></i> Gửi</button>
+  </form>
+  <div class="hint">Không nên nhập mật khẩu hay thông tin cá nhân nhạy cảm. Email và số điện thoại sẽ được che khi ghi nhật ký.</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var log = document.getElementById("log"), f = document.getElementById("f"), q = document.getElementById("q");
+  function bubble(text, who) {
+    var m = document.createElement("div"); m.className = "msg" + (who === "bot" ? " staff" : "");
+    var a = document.createElement("div"); a.className = "avatar"; a.innerHTML = who === "bot" ? '<i class="bi bi-robot"></i>' : '<i class="bi bi-person"></i>';
+    var b = document.createElement("div"); b.className = "bubble";
+    var meta = document.createElement("div"); meta.className = "meta"; meta.innerHTML = "<b>" + (who === "bot" ? "Chatbot" : "Bạn") + "</b>";
+    var body = document.createElement("div"); body.style.whiteSpace = "pre-wrap"; body.textContent = text;
+    b.appendChild(meta); b.appendChild(body); m.appendChild(a); m.appendChild(b); log.appendChild(m); log.scrollTop = log.scrollHeight;
+    return b;
+  }
+  function ask(text) {
+    text = text.trim(); if (!text) return;
+    bubble(text, "me"); q.value = "";
+    fetch("{{ url_for('chatbot.ask') }}", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({question: text})})
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var b = bubble(j.answer, "bot");
+        if (j.ticket_url) {
+          var a = document.createElement("a"); a.href = j.ticket_url; a.className = "btn sm " + (j.handoff ? "accent" : "light"); a.style.marginTop = "10px";
+          a.innerHTML = '<i class="bi bi-headset"></i> Vẫn cần hỗ trợ'; b.appendChild(document.createElement("br")); b.appendChild(a);
+        }
+      })
+      .catch(function () { bubble("Có lỗi kết nối, bạn thử lại sau nhé.", "bot"); });
+  }
+  f.addEventListener("submit", function (e) { e.preventDefault(); ask(q.value); });
+  document.querySelectorAll(".chip").forEach(function (c) { c.addEventListener("click", function () { ask(c.textContent); }); });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import err %}
+{% block title %}Gửi yêu cầu hỗ trợ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="crumbs"><a href="{{ url_for('support.my_tickets') }}">Yêu cầu của tôi</a> / Gửi mới</div>
+    <h1 class="page-title">Gửi yêu cầu <em class="hl">hỗ trợ</em></h1>
+    <div class="page-sub">Mô tả rõ vấn đề để nhân viên xử lý nhanh hơn.</div>
+  </div>
+</div>
+
+<form method="post" class="card" style="max-width:760px" novalidate>
+  <div class="field">
+    <label class="lbl" for="loai_ho_tro_id">Loại hỗ trợ <span class="req">*</span></label>
+    <select class="input {{ 'invalid' if errors.get('loai_ho_tro_id') }}" id="loai_ho_tro_id" name="loai_ho_tro_id">
+      <option value="">— Chọn loại hỗ trợ —</option>
+      {% for l in loai_list %}<option value="{{ l.id }}" {{ 'selected' if data.get('loai_ho_tro_id') == l.id|string }}>{{ l.ten_loai }}</option>{% endfor %}
+    </select>
+    {{ err(errors, 'loai_ho_tro_id') }}
+  </div>
+  <div class="field">
+    <label class="lbl" for="tieu_de">Tiêu đề <span class="req">*</span></label>
+    <input class="input {{ 'invalid' if errors.get('tieu_de') }}" id="tieu_de" name="tieu_de" value="{{ data.get('tieu_de', '') }}" maxlength="200">
+    {{ err(errors, 'tieu_de') }}
+  </div>
+  <div class="callout" style="margin-bottom:16px"><i class="bi bi-robot"></i> Bạn đã thử <a href="{{ url_for('chatbot.chat') }}">hỏi chatbot</a> chưa? Có thể câu trả lời đã có sẵn.</div>
+  <div class="field">
+    <label class="lbl" for="noi_dung">Nội dung <span class="req">*</span></label>
+    <textarea class="input {{ 'invalid' if errors.get('noi_dung') }}" id="noi_dung" name="noi_dung" rows="7" maxlength="5000">{{ data.get('noi_dung', '') }}</textarea>
+    {{ err(errors, 'noi_dung') }}
+    <div class="hint">Từ 10 đến 5000 ký tự.</div>
+  </div>
+  <div class="field" style="padding:14px 16px;border-radius:14px;background:var(--accent-soft)">
+    <label class="check"><input type="checkbox" name="an_danh" value="1" {{ 'checked' if data.get('an_danh') }}> <b><i class="bi bi-incognito"></i> Gửi ẩn danh</b></label>
+    <div class="hint" style="color:var(--accent-ink)">Nhân viên và quản trị viên sẽ <b>không thấy tên, mã sinh viên, lớp</b> của bạn. Chỉ bạn xem được yêu cầu này và nhận phản hồi như bình thường. Hãy tránh tự ghi tên hoặc thông tin nhận dạng vào nội dung.</div>
+  </div>
+  <div class="actions">
+    <button class="btn" type="submit"><i class="bi bi-send"></i> Gửi yêu cầu</button>
+    <a class="btn light" href="{{ url_for('support.my_tickets') }}">Hủy</a>
+  </div>
+</form>
+{% endblock %}

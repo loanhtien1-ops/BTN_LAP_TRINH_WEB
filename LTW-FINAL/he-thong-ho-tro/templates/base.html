@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} · Hỗ trợ người học</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% set ep = request.endpoint or '' %}
+{% macro nav_item(endpoint, icon, label, match=None) %}
+  {% set m = match or endpoint %}
+  <a href="{{ url_for(endpoint) }}" class="{{ 'active' if ep == m or ep.startswith(m + '.') else '' }}"><i class="bi {{ icon }}"></i>{{ label }}</a>
+{% endmacro %}
+
+{% if current_user %}
+{% set role = current_user['vai_tro'] %}
+{% set role_name = {'admin': 'Quản trị viên', 'support_staff': 'Nhân viên hỗ trợ', 'student': 'Sinh viên'}[role] %}
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('home') }}">
+      <span class="logo"><i class="bi bi-mortarboard-fill"></i></span>
+      <span>Hỗ trợ người học<small>Quản lý &amp; đồng hành</small></span>
+    </a>
+
+    <nav class="nav">
+      {% if role == 'student' %}
+        <div class="nav-label">Cổng sinh viên</div>
+        {{ nav_item('portal.profile', 'bi-person-vcard', 'Hồ sơ của tôi') }}
+        {{ nav_item('portal.curriculum', 'bi-journal-bookmark', 'Chương trình đào tạo') }}
+        {{ nav_item('portal.finance', 'bi-wallet2', 'Học phí & công nợ') }}
+        <div class="nav-label">Hỗ trợ</div>
+        {{ nav_item('chatbot.chat', 'bi-robot', 'Hỏi chatbot', 'chatbot.chat') }}
+        {{ nav_item('chatbot.faq_list', 'bi-question-circle', 'Câu hỏi thường gặp', 'chatbot.faq_list') }}
+        {{ nav_item('support.my_tickets', 'bi-chat-left-text', 'Yêu cầu của tôi') }}
+        {{ nav_item('support.new_ticket', 'bi-plus-circle', 'Gửi yêu cầu mới') }}
+      {% else %}
+        <div class="nav-label">Quản lý</div>
+        {{ nav_item('students.list_students', 'bi-people', 'Sinh viên', 'students') }}
+        {% if role == 'admin' %}
+          {{ nav_item('catalog.nganh_list', 'bi-diagram-3', 'Ngành học') }}
+          {{ nav_item('catalog.lop_list', 'bi-collection', 'Lớp & khóa học') }}
+        {% endif %}
+        <div class="nav-label">Hỗ trợ &amp; báo cáo</div>
+        {{ nav_item('support.manage', 'bi-headset', 'Yêu cầu hỗ trợ', 'support') }}
+        {{ nav_item('chatbot.manage', 'bi-robot', 'FAQ & chatbot', 'chatbot.manage') }}
+        {{ nav_item('dashboard.index', 'bi-bar-chart-line', 'Dashboard') }}
+        {{ nav_item('dashboard.chi_tieu_list', 'bi-clipboard-data', 'Danh mục chỉ tiêu') }}
+        {% if role == 'admin' %}{{ nav_item('dashboard.pham_vi', 'bi-person-gear', 'Phạm vi nhân viên') }}{% endif %}
+      {% endif %}
+      <div class="nav-label">Tài khoản</div>
+      {{ nav_item('portal.change_password', 'bi-key', 'Đổi mật khẩu') }}
+      <a href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right"></i>Đăng xuất</a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar">{{ (current_user['ho_ten'] or current_user['username'])[:1]|upper }}</div>
+        <div class="who"><b>{{ current_user['ho_ten'] or current_user['username'] }}</b><span>{{ role_name }}</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div>
+    <div class="topbar">
+      <button class="icon-btn" data-nav-toggle aria-label="Menu"><i class="bi bi-list"></i></button>
+      <b>Hỗ trợ người học</b>
+      <span class="avatar" style="width:32px;height:32px">{{ (current_user['ho_ten'] or current_user['username'])[:1]|upper }}</span>
+    </div>
+    <main class="main">
+      {% include '_flashes.html' %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:16px 28px">
+    <a class="brand" href="{{ url_for('auth.login') }}" style="padding:0"><span class="logo"><i class="bi bi-mortarboard-fill"></i></span><span>Hỗ trợ người học</span></a>
+    <a class="btn sm" href="{{ url_for('auth.login') }}">Đăng nhập <i class="bi bi-arrow-right"></i></a>
+  </header>
+  <main class="main" style="max-width:920px;margin:0 auto">
+    {% include '_flashes.html' %}
+    {% block content_public %}{% block content_anon %}{% endblock %}{% endblock %}
+  </main>
+{% endif %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% if current_user and current_user['vai_tro'] == 'student' and request.endpoint != 'chatbot.chat' %}
+<div id="cbw" data-ask="{{ url_for('chatbot.ask') }}" data-page="{{ url_for('chatbot.chat') }}">
+  <div class="cbw-panel" hidden role="dialog" aria-label="Chatbot hỗ trợ">
+    <div class="cbw-head"><div><b>Chatbot hỗ trợ</b><small>Trả lời nhanh từ kho FAQ của nhà trường</small></div><button type="button" class="cbw-close" aria-label="Đóng">×</button></div>
+    <div class="cbw-log"></div>
+    <form class="cbw-form" autocomplete="off"><input maxlength="1000" placeholder="Nhập câu hỏi…" required><button type="submit">Gửi</button></form>
+  </div>
+  <button type="button" class="cbw-fab" aria-expanded="false" aria-label="Mở chatbot">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.6A8 8 0 1 1 21 12z"/><circle cx="9" cy="12" r=".6" fill="currentColor"/><circle cx="13" cy="12" r=".6" fill="currentColor"/><circle cx="17" cy="12" r=".6" fill="currentColor"/></svg>
+    Hỏi chatbot
+  </button>
+</div>
+<script src="{{ url_for('static', filename='js/chatbot-widget.js') }}"></script>
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

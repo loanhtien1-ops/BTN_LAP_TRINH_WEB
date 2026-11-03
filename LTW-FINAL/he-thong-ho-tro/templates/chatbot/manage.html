@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}FAQ & chatbot{% endblock %}
+{% block content %}
+{% set admin = current_user['vai_tro'] == 'admin' %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">FAQ &amp; <em class="hl">chatbot</em></h1>
+    <div class="page-sub">{{ 'Bạn tạo FAQ là được duyệt ngay.' if admin else 'FAQ bạn tạo hoặc sửa sẽ chờ admin duyệt trước khi chatbot dùng.' }}</div>
+  </div>
+</div>
+
+<div class="grid side">
+  <div class="stack">
+    <form class="card" method="post" action="{{ url_for('chatbot.create') }}" id="form-new">
+      <div class="card-head"><div class="card-title serif">Thêm câu hỏi</div></div>
+      {% if prefill.cau_hoi %}<div class="callout amber" style="margin-bottom:14px"><i class="bi bi-shield-check"></i> Tiêu đề được điền sẵn từ yêu cầu. Hãy viết lại ở dạng chung, <b>không đưa tên, mã sinh viên hay thông tin cá nhân</b> vào FAQ.</div>{% endif %}
+      <div class="field"><label class="lbl" for="cau_hoi">Câu hỏi <span class="req">*</span></label><input class="input" id="cau_hoi" name="cau_hoi" maxlength="300" required value="{{ prefill.cau_hoi }}"></div>
+      <div class="field"><label class="lbl" for="cau_tra_loi">Câu trả lời <span class="req">*</span></label><textarea class="input" id="cau_tra_loi" name="cau_tra_loi" rows="4" maxlength="5000" required></textarea></div>
+      <div class="field"><label class="lbl" for="tu_khoa">Từ khóa <span class="req">*</span></label><input class="input" id="tu_khoa" name="tu_khoa" maxlength="300" required value="{{ prefill.tu_khoa }}" placeholder="quên mật khẩu, đổi mật khẩu">
+        <div class="hint">Ngăn cách bằng dấu phẩy. Chatbot dựa vào đây để tìm câu trả lời.</div></div>
+      <div class="field"><label class="check"><input type="checkbox" name="can_chuyen_nhan_vien" value="1"> Cần chuyển nhân viên (chatbot không tự trả lời, mời sinh viên gửi yêu cầu)</label></div>
+      <button class="btn" type="submit"><i class="bi bi-plus-lg"></i> Thêm</button>
+    </form>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title serif">Danh sách FAQ</div><span class="muted small">{{ faqs|length }} câu</span></div>
+      <div class="table-wrap"><table class="tbl">
+        <thead><tr><th>Câu hỏi</th><th>Trạng thái</th><th>Người tạo / duyệt</th><th></th></tr></thead>
+        <tbody>
+        {% for f in faqs %}
+          <tr>
+            <td style="max-width:360px"><b>{{ f.cau_hoi }}</b><span class="sub">{{ f.cau_tra_loi|truncate(80) }}</span>
+              {% if f.can_chuyen_nhan_vien %}<span class="badge amber plain" style="margin-top:4px">Chuyển nhân viên</span>{% endif %}</td>
+            <td>{% if f.trang_thai == 'da_duyet' %}<span class="badge green">Đã duyệt</span>{% else %}<span class="badge amber">Chờ duyệt</span>{% endif %}</td>
+            <td class="small">{{ f.ten_nguoi_tao or '—' }}<span class="sub">{{ f.ten_nguoi_duyet or '' }}</span></td>
+            <td class="nowrap text-right">
+              <button class="icon-btn" title="Sửa" data-dialog="dlg-faq" data-title="Sửa FAQ" data-action="{{ url_for('chatbot.update', faq_id=f.id) }}"
+                data-fill='{{ {"cau_hoi": f.cau_hoi, "cau_tra_loi": f.cau_tra_loi, "tu_khoa": f.tu_khoa, "can_chuyen_nhan_vien": f.can_chuyen_nhan_vien}|tojson|forceescape }}'><i class="bi bi-pencil"></i></button>
+              {% if admin %}
+                {% if f.trang_thai == 'cho_duyet' %}
+                <form method="post" action="{{ url_for('chatbot.approve', faq_id=f.id) }}" style="display:inline"><button class="icon-btn" title="Duyệt"><i class="bi bi-check2-circle"></i></button></form>
+                {% else %}
+                <form method="post" action="{{ url_for('chatbot.unapprove', faq_id=f.id) }}" style="display:inline"><button class="icon-btn" title="Ẩn khỏi chatbot"><i class="bi bi-eye-slash"></i></button></form>
+                {% endif %}
+                <form method="post" action="{{ url_for('chatbot.delete', faq_id=f.id) }}" style="display:inline" data-confirm="Xóa FAQ này?"><button class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button></form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4">{{ empty('Chưa có FAQ nào.', 'bi-question-circle') }}</td></tr>
+        {% endfor %}
+        </tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">Chatbot chưa trả lời được</div></div>
+    <div class="muted small" style="margin-bottom:10px">Câu sinh viên hỏi mà chưa có FAQ phù hợp (đã che email/SĐT, không hiện người hỏi). Hãy biến những câu hỏi nhiều thành FAQ.</div>
+    {% for c in chua_tra_loi %}
+      <div style="padding:10px 0;border-top:1px solid var(--line)">
+        <div class="small">{{ c.cau_hoi }}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span class="badge gray plain">{{ c.so_lan }} lần</span>
+          <a class="small" href="{{ url_for('chatbot.manage', cau_hoi=c.cau_hoi) }}#form-new">Tạo FAQ từ câu này</a></div>
+      </div>
+    {% else %}<div class="muted">Chưa có câu hỏi nào.</div>{% endfor %}
+  </div>
+</div>
+
+<dialog id="dlg-faq">
+  <form method="post" action="" class="dlg-body">
+    <h3 data-title>Sửa FAQ</h3>
+    <div class="field"><label class="lbl">Câu hỏi</label><input class="input" name="cau_hoi" maxlength="300" required></div>
+    <div class="field"><label class="lbl">Câu trả lời</label><textarea class="input" name="cau_tra_loi" rows="5" maxlength="5000" required></textarea></div>
+    <div class="field"><label class="lbl">Từ khóa</label><input class="input" name="tu_khoa" maxlength="300" required></div>
+    <div class="field"><label class="check"><input type="checkbox" name="can_chuyen_nhan_vien" value="1"> Cần chuyển nhân viên</label></div>
+    {% if not admin %}<div class="hint">Sau khi sửa, FAQ sẽ chờ admin duyệt lại.</div>{% endif %}
+    <div class="dlg-foot"><button type="button" class="btn light" data-close>Hủy</button><button class="btn" type="submit">Lưu</button></div>
+  </form>
+</dialog>
+{% endblock %}

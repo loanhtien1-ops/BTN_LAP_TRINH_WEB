@@ -1,0 +1,10 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flashes">
+  {% for cat, msg in messages %}
+  {% set icon = {'success': 'bi-check-circle-fill', 'danger': 'bi-exclamation-octagon-fill', 'warning': 'bi-exclamation-triangle-fill', 'info': 'bi-info-circle-fill'}.get(cat, 'bi-info-circle-fill') %}
+  <div class="flash {{ cat }}" role="alert"><i class="bi {{ icon }}"></i><div>{{ msg }}</div><button class="x" type="button" data-dismiss aria-label="Đóng">×</button></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

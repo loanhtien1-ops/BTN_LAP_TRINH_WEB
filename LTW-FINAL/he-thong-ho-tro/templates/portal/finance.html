@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty, money %}
+{% block title %}Học phí & công nợ{% endblock %}
+{% block content %}
+{% set pct = (tong_da_nop / tong_phai_nop * 100)|round|int if tong_phai_nop else 100 %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Học phí &amp; <em class="hl">công nợ</em></h1>
+    <div class="page-sub">Theo dõi các khoản phải nộp theo từng học kỳ.</div>
+  </div>
+</div>
+
+<div class="stat-strip c3">
+  <div class="stat"><span class="ico i-purple"><i class="bi bi-receipt"></i></span><div><b>{{ money(tong_phai_nop) }}</b><span>Tổng phải nộp</span></div></div>
+  <div class="stat"><span class="ico i-green"><i class="bi bi-check2-circle"></i></span><div><b>{{ money(tong_da_nop) }}</b><span>Đã nộp</span></div></div>
+  <div class="stat"><span class="ico {{ 'i-red' if cong_no > 0 else 'i-green' }}"><i class="bi bi-exclamation-circle"></i></span><div><b>{{ money(cong_no) }}</b><span>Công nợ còn lại</span></div></div>
+</div>
+
+{% if cong_no > 0 %}
+<div class="callout amber" style="margin-bottom:18px"><i class="bi bi-info-circle"></i> Bạn còn công nợ {{ money(cong_no) }}. Nếu cần gia hạn hoặc có thắc mắc, hãy <a href="{{ url_for('support.new_ticket') }}">gửi yêu cầu hỗ trợ</a>.</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-head"><div class="card-title">Tiến độ nộp tổng thể</div><b>{{ pct }}%</b></div>
+  <div class="progress green"><i style="width: {{ pct }}%"></i></div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Học kỳ</th><th>Nội dung</th><th class="text-right">Phải nộp</th><th class="text-right">Đã nộp</th><th>Hạn nộp</th><th>Trạng thái</th><th>Ngày giao dịch</th></tr></thead>
+      <tbody>
+      {% for r in records %}
+        <tr>
+          <td><b>{{ r.hoc_ky }}</b></td>
+          <td>{{ r.noi_dung }}</td>
+          <td class="text-right mono">{{ money(r.so_tien_phai_nop) }}</td>
+          <td class="text-right mono">{{ money(r.so_tien_da_nop) }}</td>
+          <td>{{ r.han_nop|dmy }}</td>
+          <td>
+            {% if r.trang_thai_nop == 'Đã nộp đủ' %}<span class="badge green">Đã nộp đủ</span>
+            {% elif r.trang_thai_nop == 'Nộp một phần' %}<span class="badge amber">Nộp một phần</span>
+            {% else %}<span class="badge red">Chưa nộp</span>{% endif %}
+          </td>
+          <td>{{ r.ngay_giao_dich|dmy_gio if r.ngay_giao_dich else '—' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7">{{ empty('Chưa có khoản thu nào.', 'bi-wallet2') }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

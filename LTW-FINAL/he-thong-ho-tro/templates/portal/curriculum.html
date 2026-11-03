@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}Chương trình đào tạo{% endblock %}
+{% block content %}
+{% set pct = (accumulated_credits / total_credits * 100)|round|int if total_credits else 0 %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Chương trình <em class="hl">đào tạo</em></h1>
+    <div class="page-sub">Ngành {{ sv.ten_nganh }} · Khóa {{ sv.khoa_hoc }}</div>
+  </div>
+</div>
+
+<div class="card" style="display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+  <div class="ring" style="--p: {{ pct }}"><div>{{ pct }}%<small>hoàn thành</small></div></div>
+  <div class="stat-strip c3" style="flex:1;box-shadow:none;margin:0;padding:0;min-width:280px">
+    <div class="stat"><span class="ico i-purple"><i class="bi bi-journal-text"></i></span><div><b>{{ total_credits }}</b><span>Tổng tín chỉ CTĐT</span></div></div>
+    <div class="stat"><span class="ico i-green"><i class="bi bi-check2-circle"></i></span><div><b>{{ accumulated_credits }}</b><span>Tín chỉ tích lũy</span></div></div>
+    <div class="stat"><span class="ico i-amber"><i class="bi bi-hourglass-split"></i></span><div><b>{{ total_credits - accumulated_credits }}</b><span>Còn lại</span></div></div>
+  </div>
+</div>
+
+{% for sem, courses in semesters.items() %}
+<div class="card mt">
+  <div class="card-head"><div class="card-title serif">Học kỳ {{ sem }}</div><span class="badge purple plain">{{ courses|sum(attribute='so_tin_chi') }} tín chỉ</span></div>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã HP</th><th>Học phần</th><th>Loại</th><th class="text-center">TC</th><th class="text-center">CC</th><th class="text-center">Thi</th><th class="text-center">Tổng kết</th><th class="text-center">Điểm chữ</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+      {% for c in courses %}
+        <tr>
+          <td>{{ c.ma_hp }}</td>
+          <td><b>{{ c.ten_hp }}</b></td>
+          <td>{{ c.loai_hp }}</td>
+          <td class="text-center">{{ c.so_tin_chi }}</td>
+          <td class="text-center">{{ c.diem_chuyen_can if c.diem_chuyen_can is not none else '—' }}</td>
+          <td class="text-center">{{ c.diem_thi if c.diem_thi is not none else '—' }}</td>
+          <td class="text-center"><b>{{ c.diem_tong_ket if c.diem_tong_ket is not none else '—' }}</b></td>
+          <td class="text-center">{{ c.diem_chu or '—' }}</td>
+          <td>
+            {% if c.trang_thai_hp == 'Đạt' %}<span class="badge green">Đạt</span>
+            {% elif c.trang_thai_hp == 'Học lại' %}<span class="badge red">Học lại</span>
+            {% elif c.trang_thai_hp == 'Đang học' %}<span class="badge blue">Đang học</span>
+            {% else %}<span class="badge gray">Chưa học</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card mt">{{ empty('Ngành của bạn chưa có chương trình đào tạo trong hệ thống.', 'bi-journal-x') }}</div>
+{% endfor %}
+{% endblock %}

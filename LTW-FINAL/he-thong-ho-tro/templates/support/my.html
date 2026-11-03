@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "_macros.html" import yc_badge, uutien_badge, empty %}
+{% block title %}Yêu cầu của tôi{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Yêu cầu <em class="hl">hỗ trợ</em> của tôi</h1>
+    <div class="page-sub">{{ tickets|length }} yêu cầu đã gửi.</div>
+  </div>
+  <div class="actions"><a class="btn" href="{{ url_for('support.new_ticket') }}"><i class="bi bi-plus-lg"></i> Gửi yêu cầu mới</a></div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã</th><th>Tiêu đề</th><th>Loại</th><th>Ngày gửi</th><th>Cập nhật</th><th>Người xử lý</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+      {% for t in tickets %}
+        <tr class="clickable" onclick="location.href='{{ url_for('support.detail', yc_id=t.id) }}'">
+          <td>#{{ t.id }}</td>
+          <td><a href="{{ url_for('support.detail', yc_id=t.id) }}"><b>{{ t.tieu_de }}</b></a>{% if t.la_an_danh %}<span class="sub"><span class="badge purple plain"><i class="bi bi-incognito"></i> Gửi ẩn danh</span></span>{% endif %}</td>
+          <td>{{ t.ten_loai }}</td>
+          <td>{{ t.ngay_tao|dmy_gio }}</td>
+          <td>{{ t.ngay_cap_nhat|dmy_gio }}</td>
+          <td>{{ t.ten_nguoi_xu_ly or '—' }}</td>
+          <td>{{ yc_badge(t.trang_thai) }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7">{{ empty('Bạn chưa gửi yêu cầu nào.', 'bi-chat-left-dots') }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

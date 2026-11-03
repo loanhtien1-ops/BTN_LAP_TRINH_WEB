@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Lỗi {{ code }}{% endblock %}
+{% block content %}
+<div class="err-page">
+  <div>
+    <div class="code">{{ code }}</div>
+    <h2 class="serif" style="font-size:30px;margin:6px 0 8px">Ôi, có trục trặc rồi</h2>
+    <p class="muted">{{ message }}</p>
+    <a class="btn" href="{{ url_for('home') if current_user else url_for('auth.login') }}"><i class="bi bi-arrow-left"></i> {{ 'Về trang chủ' if current_user else 'Về trang đăng nhập' }}</a>
+  </div>
+</div>
+{% endblock %}
+{% block content_anon %}
+<div class="err-page">
+  <div>
+    <div class="code">{{ code }}</div>
+    <p class="muted">{{ message }}</p>
+    <a class="btn" href="{{ url_for('auth.login') }}">Về trang đăng nhập</a>
+  </div>
+</div>
+{% endblock %}

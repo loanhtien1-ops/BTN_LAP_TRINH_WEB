@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% from "_macros.html" import yc_badge, uutien_badge %}
+{% block title %}Yêu cầu #{{ yc.id }}{% endblock %}
+{% block content %}
+{% set TEN = {'cho_xu_ly': 'Chờ xử lý', 'dang_xu_ly': 'Đang xử lý', 'da_giai_quyet': 'Đã giải quyết'} %}
+<div class="page-head">
+  <div>
+    <div class="crumbs">
+      {% if la_nhan_vien %}<a href="{{ url_for('support.manage') }}">Yêu cầu hỗ trợ</a>{% else %}<a href="{{ url_for('support.my_tickets') }}">Yêu cầu của tôi</a>{% endif %} / #{{ yc.id }}
+    </div>
+    <h1 class="page-title">{{ yc.tieu_de }}</h1>
+    <div class="page-sub">{{ yc_badge(yc.trang_thai) }} &nbsp; {{ yc.ten_loai }} · gửi lúc {{ yc.ngay_tao|dmy_gio }}</div>
+  </div>
+  {% if la_nhan_vien %}
+  <div class="actions">
+    <a class="btn light" href="{{ url_for('chatbot.manage', cau_hoi=yc.tieu_de) }}#form-new"><i class="bi bi-question-circle"></i> Đề xuất FAQ</a>
+    {% if not yc.nguoi_xu_ly_id %}
+    <form method="post" action="{{ url_for('support.assign', yc_id=yc.id) }}"><button class="btn accent"><i class="bi bi-hand-index-thumb"></i> Nhận xử lý</button></form>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% if yc.la_an_danh %}
+<div class="callout" style="margin-bottom:18px"><i class="bi bi-incognito"></i>
+  {% if la_nhan_vien %}Sinh viên gửi yêu cầu này <b>ẩn danh</b>. Không tìm cách xác định danh tính và không đưa thông tin nhận dạng vào FAQ hay báo cáo.
+  {% else %}Bạn đã gửi yêu cầu này <b>ẩn danh</b>: nhân viên không thấy tên, mã sinh viên hay lớp của bạn.{% endif %}
+</div>
+{% endif %}
+
+{% if la_nhan_vien and faq_goi_y %}
+<div class="callout" style="margin-bottom:18px"><i class="bi bi-lightbulb"></i> <b>Gợi ý từ FAQ:</b> {{ faq_goi_y.cau_hoi }}<br><span class="small">{{ faq_goi_y.cau_tra_loi|truncate(220) }}</span></div>
+{% endif %}
+
+<div class="grid side">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><div class="card-title serif">Nội dung yêu cầu</div></div>
+      <div>{{ yc.noi_dung|nl2br }}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title serif">Trao đổi</div></div>
+      <div class="chat">
+        {% for m in messages %}
+        {% set staff = m.vai_tro != 'student' %}
+        <div class="msg {{ 'internal' if m.la_noi_bo else ('staff' if staff else '') }}">
+          <div class="avatar">{{ (m.ho_ten or '?')[:1]|upper }}</div>
+          <div class="bubble">
+            <div class="meta"><b>{{ m.ho_ten }}</b> · {{ 'Nhân viên' if staff else 'Sinh viên' }} · {{ m.ngay_tao|dmy_gio }}
+              {% if m.la_noi_bo %}<span class="badge amber plain">Ghi chú nội bộ</span>{% endif %}</div>
+            {{ m.noi_dung|nl2br }}
+          </div>
+        </div>
+        {% else %}
+        <div class="muted">Chưa có phản hồi nào.</div>
+        {% endfor %}
+      </div>
+
+      <form method="post" action="{{ url_for('support.reply', yc_id=yc.id) }}" class="mt">
+        <div class="field">
+          <label class="lbl" for="noi_dung">Phản hồi</label>
+          <textarea class="input" id="noi_dung" name="noi_dung" rows="4" maxlength="5000" required placeholder="Nhập nội dung phản hồi…"></textarea>
+        </div>
+        <div class="actions" style="justify-content:space-between">
+          {% if la_nhan_vien %}<label class="check"><input type="checkbox" name="la_noi_bo" value="1"> Ghi chú nội bộ (sinh viên không thấy)</label>{% else %}<span></span>{% endif %}
+          <button class="btn" type="submit"><i class="bi bi-send"></i> Gửi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Thông tin</div></div>
+      <dl class="dl" style="grid-template-columns:110px 1fr">
+        <dt>Sinh viên</dt><dd>{% if yc.la_an_danh and la_nhan_vien %}<span class="badge purple plain"><i class="bi bi-incognito"></i> Ẩn danh</span>{% else %}{{ yc.ho_ten_sv }}<br><span class="muted small">{{ yc.ma_sv }} · {{ yc.ma_lop }}</span>{% endif %}</dd>
+        <dt>Loại</dt><dd>{{ yc.ten_loai }}</dd>
+        <dt>Ưu tiên</dt><dd>{{ uutien_badge(yc.muc_uu_tien) }}</dd>
+        <dt>Người xử lý</dt><dd>{{ yc.ten_nguoi_xu_ly or '—' }}</dd>
+        <dt>Cập nhật</dt><dd>{{ yc.ngay_cap_nhat|dmy_gio }}</dd>
+        <dt>Giải quyết</dt><dd>{{ yc.ngay_giai_quyet|dmy_gio }}</dd>
+      </dl>
+    </div>
+
+    {% if la_nhan_vien and next_states %}
+    <form class="card" method="post" action="{{ url_for('support.update_status', yc_id=yc.id) }}">
+      <div class="card-head"><div class="card-title">Đổi trạng thái</div></div>
+      <div class="field">
+        <label class="lbl" for="trang_thai">Chuyển sang</label>
+        <select class="input" id="trang_thai" name="trang_thai">
+          {% for v, ten in next_states %}<option value="{{ v }}">{{ ten }}{{ ' (mở lại)' if yc.trang_thai == 'da_giai_quyet' }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label class="lbl" for="ghi_chu">Ghi chú</label>
+        <input class="input" id="ghi_chu" name="ghi_chu" maxlength="255" placeholder="Không bắt buộc">
+      </div>
+      <button class="btn block" type="submit">Cập nhật</button>
+    </form>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Lịch sử trạng thái</div></div>
+      <ul class="timeline">
+        {% for h in history %}
+        <li>
+          <b>{{ TEN.get(h.trang_thai_moi, h.trang_thai_moi) }}</b>
+          {% if h.trang_thai_cu %}<span class="muted small"> (từ {{ TEN.get(h.trang_thai_cu, h.trang_thai_cu) }})</span>{% endif %}
+          <div class="muted small">{{ h.ngay_thay_doi|dmy_gio }}{% if h.ho_ten %} · {{ h.ho_ten }}{% endif %}</div>
+          {% if h.ghi_chu %}<div class="small">{{ h.ghi_chu }}</div>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

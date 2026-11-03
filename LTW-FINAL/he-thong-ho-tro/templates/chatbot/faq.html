@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}Câu hỏi thường gặp{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Câu hỏi <em class="hl">thường gặp</em></h1>
+    <div class="page-sub">Các câu trả lời đã được nhà trường duyệt.</div>
+  </div>
+  {% if current_user['vai_tro'] == 'student' %}
+  <div class="actions"><a class="btn" href="{{ url_for('chatbot.chat') }}"><i class="bi bi-robot"></i> Hỏi chatbot</a></div>
+  {% endif %}
+</div>
+<form method="get" class="card"><div class="filters">
+  <div class="field grow"><label class="lbl" for="q">Tìm kiếm</label>
+    <div class="searchbox"><i class="bi bi-search"></i><input class="input" id="q" name="q" value="{{ q }}" placeholder="Ví dụ: quên mật khẩu, gia hạn học phí…"></div></div>
+  <div class="actions"><button class="btn" type="submit"><i class="bi bi-search"></i> Tìm</button><a class="btn light" href="{{ url_for('chatbot.faq_list') }}">Xóa lọc</a></div>
+</div></form>
+<div class="stack mt">
+  {% for it in items %}
+  <details class="card" style="padding:0">
+    <summary style="cursor:pointer;list-style:none;padding:18px 22px;display:flex;gap:12px;align-items:center;justify-content:space-between">
+      <b>{{ it.cau_hoi }}</b><i class="bi bi-chevron-down muted"></i></summary>
+    <div style="padding:0 22px 20px;color:var(--ink-2)">{{ it.cau_tra_loi|nl2br }}</div>
+  </details>
+  {% else %}
+  <div class="card">{{ empty('Chưa có câu hỏi nào phù hợp. Bạn có thể hỏi chatbot hoặc gửi yêu cầu hỗ trợ.', 'bi-question-circle') }}</div>
+  {% endfor %}
+</div>
+{% endblock %}

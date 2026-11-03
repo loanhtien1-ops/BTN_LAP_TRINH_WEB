@@ -1,0 +1,44 @@
+{# Thành phần dùng chung #}
+
+{% macro pager(endpoint, page, pages, args={}) %}
+  {% set q = {} %}
+  {% for k, v in args.items() if k != 'page' and v %}{% set _ = q.update({k: v}) %}{% endfor %}
+  {% if pages > 1 %}
+  <nav class="pages" aria-label="Phân trang">
+    {% if page > 1 %}<a href="{{ url_for(endpoint, page=page-1, **q) }}">‹</a>{% else %}<span class="off">‹</span>{% endif %}
+    {% for p in range(1, pages + 1) %}
+      {% if p == 1 or p == pages or (p - page)|abs <= 1 %}
+        {% if p == page %}<span class="cur">{{ p }}</span>{% else %}<a href="{{ url_for(endpoint, page=p, **q) }}">{{ p }}</a>{% endif %}
+      {% elif (p - page)|abs == 2 %}<span class="off">…</span>{% endif %}
+    {% endfor %}
+    {% if page < pages %}<a href="{{ url_for(endpoint, page=page+1, **q) }}">›</a>{% else %}<span class="off">›</span>{% endif %}
+  </nav>
+  {% endif %}
+{% endmacro %}
+
+{% macro err(errors, name) %}{% if errors and errors.get(name) %}<div class="err">{{ errors[name] }}</div>{% endif %}{% endmacro %}
+
+{# Huy hiệu trạng thái sinh viên #}
+{% macro sv_badge(t) %}
+  {% set c = {'Đang học': 'green', 'Bảo lưu': 'amber', 'Đã tốt nghiệp': 'blue', 'Thôi học': 'red'}.get(t, 'gray') %}
+  <span class="badge {{ c }}">{{ t }}</span>
+{% endmacro %}
+
+{# Huy hiệu trạng thái yêu cầu hỗ trợ #}
+{% macro yc_badge(t) %}
+  {% set c = {'cho_xu_ly': 'amber', 'dang_xu_ly': 'blue', 'da_giai_quyet': 'green'}.get(t, 'gray') %}
+  {% set n = {'cho_xu_ly': 'Chờ xử lý', 'dang_xu_ly': 'Đang xử lý', 'da_giai_quyet': 'Đã giải quyết'}.get(t, t) %}
+  <span class="badge {{ c }}">{{ n }}</span>
+{% endmacro %}
+
+{% macro uutien_badge(t) %}
+  {% set c = {'cao': 'red', 'trung_binh': 'amber', 'thap': 'gray'}.get(t, 'gray') %}
+  {% set n = {'cao': 'Cao', 'trung_binh': 'Trung bình', 'thap': 'Thấp'}.get(t, t) %}
+  <span class="badge plain {{ c }}">{{ n }}</span>
+{% endmacro %}
+
+{% macro empty(text, icon='bi-inbox') %}
+  <div class="empty"><i class="bi {{ icon }}"></i>{{ text }}</div>
+{% endmacro %}
+
+{% macro money(v) %}{{ "{:,}".format(v or 0).replace(",", ".") }} ₫{% endmacro %}

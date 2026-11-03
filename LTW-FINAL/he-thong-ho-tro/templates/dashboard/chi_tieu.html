@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Danh mục chỉ tiêu{% endblock %}
+{% block content %}
+{% set bmap = {'secondary': 'gray', 'info': 'blue', 'warning': 'amber', 'success': 'green'} %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Danh mục <em class="hl">chỉ tiêu</em></h1>
+    <div class="page-sub">Mỗi chỉ tiêu đi qua các bước: nháp → xác nhận nguồn → kiểm tra → công bố.</div>
+  </div>
+  <div class="actions"><a class="btn light" href="{{ url_for('dashboard.index') }}"><i class="bi bi-bar-chart-line"></i> Về dashboard</a></div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã</th><th>Chỉ tiêu</th><th>Đơn vị</th><th>Phiên bản</th><th>Trạng thái</th><th>Giá trị đã công bố</th><th>Cập nhật</th></tr></thead>
+      <tbody>
+      {% for c in chi_tieu %}
+        {% set k = moi_nhat.get(c.id) %}
+        <tr class="clickable" onclick="location.href='{{ url_for('dashboard.chi_tieu_detail', ma=c.ma) }}'">
+          <td><a href="{{ url_for('dashboard.chi_tieu_detail', ma=c.ma) }}"><b>{{ c.ma }}</b></a></td>
+          <td>{{ c.ten }}<span class="sub">{{ c.dau_moi }}</span></td>
+          <td>{{ c.don_vi }}</td>
+          <td>v{{ c.phien_ban }}</td>
+          <td><span class="badge {{ bmap[mau[c.trang_thai]] }}">{{ c.ten_trang_thai }}</span></td>
+          <td>{% if k %}<b>{{ k.gia_tri if k.gia_tri is not none else '—' }}</b> {{ c.don_vi }}<span class="sub">{{ k.thoi_diem_tinh|dmy_gio }}</span>{% else %}<span class="muted">Chưa công bố</span>{% endif %}</td>
+          <td>{{ c.ngay_cap_nhat|dmy_gio }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="hint" style="margin-top:12px">Chỉ số nội bộ của hệ thống, không phải KPI chính thức và không đồng nhất với HEDI.</div>
+</div>
+{% endblock %}

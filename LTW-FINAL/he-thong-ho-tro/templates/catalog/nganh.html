@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}Ngành học{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Ngành <em class="hl">học</em></h1>
+    <div class="page-sub">Quản lý danh mục ngành đào tạo.</div>
+  </div>
+  <div class="actions">
+    <button class="btn" data-dialog="dlg-nganh" data-title="Thêm ngành học"><i class="bi bi-plus-lg"></i> Thêm ngành</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã ngành</th><th>Tên ngành</th><th>Số lớp</th><th>Số sinh viên</th><th></th></tr></thead>
+      <tbody>
+      {% for n in nganh_list %}
+        <tr>
+          <td><b>{{ n.ma_nganh }}</b></td>
+          <td>{{ n.ten_nganh }}</td>
+          <td>{{ n.so_lop }}</td>
+          <td>{{ n.so_sv }}</td>
+          <td class="nowrap text-right">
+            <button class="icon-btn" title="Sửa" data-dialog="dlg-nganh" data-title="Sửa ngành học"
+              data-fill='{{ {"id": n.id, "ma_nganh": n.ma_nganh, "ten_nganh": n.ten_nganh}|tojson|forceescape }}'><i class="bi bi-pencil"></i></button>
+            <form method="post" action="{{ url_for('catalog.nganh_delete', nganh_id=n.id) }}" style="display:inline" data-confirm="Xóa ngành {{ n.ma_nganh }}?">
+              <button class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">{{ empty('Chưa có ngành học nào.', 'bi-diagram-3') }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<dialog id="dlg-nganh">
+  <form method="post" action="{{ url_for('catalog.nganh_save') }}" class="dlg-body">
+    <h3 data-title>Thêm ngành học</h3>
+    <input type="hidden" name="id" value="">
+    <div class="field">
+      <label class="lbl" for="ma_nganh">Mã ngành <span class="req">*</span></label>
+      <input class="input" id="ma_nganh" name="ma_nganh" required maxlength="15">
+      <div class="hint">2–15 ký tự chữ, số, gạch ngang hoặc gạch dưới.</div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="ten_nganh">Tên ngành <span class="req">*</span></label>
+      <input class="input" id="ten_nganh" name="ten_nganh" required maxlength="100">
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn light" data-close>Hủy</button>
+      <button class="btn" type="submit">Lưu</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

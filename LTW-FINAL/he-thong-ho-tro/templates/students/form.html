@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "_macros.html" import err %}
+{% block title %}{{ 'Thêm sinh viên' if mode == 'create' else 'Sửa hồ sơ' }}{% endblock %}
+{% block content %}
+{% set lop_sel = (data.get('lop_id') or '')|string %}
+<div class="page-head">
+  <div>
+    <div class="crumbs"><a href="{{ url_for('students.list_students') }}">Sinh viên</a> / {{ 'Thêm mới' if mode == 'create' else 'Sửa' }}</div>
+    <h1 class="page-title">{% if mode == 'create' %}Thêm <em class="hl">sinh viên</em>{% else %}Sửa hồ sơ <em class="hl">{{ data.get('ma_sv', '') }}</em>{% endif %}</h1>
+    {% if mode == 'create' %}<div class="page-sub">Hệ thống tự tạo tài khoản đăng nhập (tên đăng nhập là mã sinh viên, mật khẩu mặc định 123456).</div>{% endif %}
+  </div>
+</div>
+
+<form method="post" class="card" novalidate>
+  <div class="form-grid">
+    <div class="field">
+      <label class="lbl" for="ma_sv">Mã sinh viên <span class="req">*</span></label>
+      <input class="input {{ 'invalid' if errors.get('ma_sv') }}" id="ma_sv" name="ma_sv" value="{{ data.get('ma_sv', '') }}" maxlength="15">
+      {{ err(errors, 'ma_sv') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="ho_ten">Họ và tên <span class="req">*</span></label>
+      <input class="input {{ 'invalid' if errors.get('ho_ten') }}" id="ho_ten" name="ho_ten" value="{{ data.get('ho_ten', '') }}" maxlength="100">
+      {{ err(errors, 'ho_ten') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="ngay_sinh">Ngày sinh</label>
+      <input class="input {{ 'invalid' if errors.get('ngay_sinh') }}" type="date" id="ngay_sinh" name="ngay_sinh" value="{{ data.get('ngay_sinh', '') }}">
+      {{ err(errors, 'ngay_sinh') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="gioi_tinh">Giới tính</label>
+      <select class="input {{ 'invalid' if errors.get('gioi_tinh') }}" id="gioi_tinh" name="gioi_tinh">
+        <option value="">— Chọn —</option>
+        {% for g in gioi_tinh_list %}<option value="{{ g }}" {{ 'selected' if data.get('gioi_tinh') == g }}>{{ g }}</option>{% endfor %}
+      </select>
+      {{ err(errors, 'gioi_tinh') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="email">Email</label>
+      <input class="input {{ 'invalid' if errors.get('email') }}" id="email" name="email" value="{{ data.get('email', '') }}">
+      {{ err(errors, 'email') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="so_dien_thoai">Số điện thoại</label>
+      <input class="input {{ 'invalid' if errors.get('so_dien_thoai') }}" id="so_dien_thoai" name="so_dien_thoai" value="{{ data.get('so_dien_thoai', '') }}">
+      {{ err(errors, 'so_dien_thoai') }}
+    </div>
+    <div class="field full">
+      <label class="lbl" for="dia_chi">Địa chỉ</label>
+      <input class="input {{ 'invalid' if errors.get('dia_chi') }}" id="dia_chi" name="dia_chi" value="{{ data.get('dia_chi', '') }}" maxlength="255">
+      {{ err(errors, 'dia_chi') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="lop_id">Lớp <span class="req">*</span></label>
+      <select class="input {{ 'invalid' if errors.get('lop_id') }}" id="lop_id" name="lop_id">
+        <option value="">— Chọn lớp —</option>
+        {% for l in lop_list %}<option value="{{ l.id }}" {{ 'selected' if lop_sel == l.id|string }}>{{ l.ma_lop }} · {{ l.ten_nganh }} · {{ l.khoa_hoc }}</option>{% endfor %}
+      </select>
+      {{ err(errors, 'lop_id') }}
+    </div>
+    <div class="field">
+      <label class="lbl" for="trang_thai">Trạng thái</label>
+      <select class="input {{ 'invalid' if errors.get('trang_thai') }}" id="trang_thai" name="trang_thai">
+        {% for t in trang_thai_list %}<option value="{{ t }}" {{ 'selected' if data.get('trang_thai') == t }}>{{ t }}</option>{% endfor %}
+      </select>
+      {{ err(errors, 'trang_thai') }}
+    </div>
+  </div>
+  <div class="actions mt">
+    <button class="btn" type="submit"><i class="bi bi-check2"></i> Lưu</button>
+    <a class="btn light" href="{{ url_for('students.detail', sv_id=sv_id) if sv_id else url_for('students.list_students') }}">Hủy</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Sơ yếu lý lịch – {{ sv.ma_sv }}</title>
+  <style>
+    @page { size: A4; margin: 18mm; }
+    body { font-family: "Times New Roman", serif; color: #111; margin: 0; background: #eee; }
+    .sheet { width: 210mm; min-height: 297mm; margin: 12px auto; padding: 18mm; background: #fff; box-sizing: border-box; box-shadow: 0 4px 24px rgba(0,0,0,.15); position: relative; }
+    .head { text-align: center; }
+    .head .qg { font-weight: bold; text-transform: uppercase; font-size: 14pt; }
+    .head .tn { font-weight: bold; font-size: 13pt; border-bottom: 1px solid #111; display: inline-block; padding-bottom: 2px; }
+    h1 { text-align: center; font-size: 18pt; margin: 26px 0 4px; text-transform: uppercase; }
+    .sub { text-align: center; font-style: italic; margin-bottom: 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13pt; }
+    td { padding: 7px 4px; vertical-align: top; }
+    td.k { width: 38%; }
+    td.v { font-weight: bold; }
+    .sign { display: flex; justify-content: space-between; margin-top: 46px; text-align: center; font-size: 13pt; }
+    .sign div { width: 45%; }
+    .stamp { position: absolute; right: 30mm; bottom: 58mm; width: 120px; height: 120px; border: 3px double #c0392b; color: #c0392b; border-radius: 50%; display: grid; place-items: center; text-align: center; font-size: 10pt; font-weight: bold; transform: rotate(-12deg); opacity: .75; }
+    .bar { max-width: 210mm; margin: 14px auto 0; display: flex; gap: 10px; justify-content: flex-end; font-family: system-ui, sans-serif; }
+    .bar button, .bar a { padding: 9px 18px; border-radius: 999px; border: 0; background: #15131a; color: #fff; cursor: pointer; font-size: 14px; text-decoration: none; }
+    .bar a { background: #fff; color: #15131a; border: 1px solid #ccc; }
+    @media print { body { background: #fff; } .sheet { margin: 0; box-shadow: none; width: auto; min-height: 0; padding: 0; } .bar { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="bar"><a href="{{ url_for('portal.profile') }}">← Quay lại</a><button onclick="window.print()">In / Lưu PDF</button></div>
+  <div class="sheet">
+    <div class="head">
+      <div class="qg">Cộng hòa xã hội chủ nghĩa Việt Nam</div>
+      <div class="tn">Độc lập – Tự do – Hạnh phúc</div>
+    </div>
+    <h1>Sơ yếu lý lịch sinh viên</h1>
+    <div class="sub">Mã số: {{ sv.ma_sv }}</div>
+    <table>
+      <tr><td class="k">Họ và tên</td><td class="v">{{ sv.ho_ten }}</td></tr>
+      <tr><td class="k">Mã sinh viên</td><td class="v">{{ sv.ma_sv }}</td></tr>
+      <tr><td class="k">Ngày sinh</td><td class="v">{{ sv.ngay_sinh|dmy }}</td></tr>
+      <tr><td class="k">Giới tính</td><td class="v">{{ sv.gioi_tinh or '—' }}</td></tr>
+      <tr><td class="k">Ngành đào tạo</td><td class="v">{{ sv.ten_nganh }}</td></tr>
+      <tr><td class="k">Lớp</td><td class="v">{{ sv.ten_lop }} ({{ sv.ma_lop }})</td></tr>
+      <tr><td class="k">Khóa học</td><td class="v">{{ sv.khoa_hoc }}</td></tr>
+      <tr><td class="k">Trạng thái học tập</td><td class="v">{{ sv.trang_thai }}</td></tr>
+      <tr><td class="k">Email</td><td class="v">{{ sv.email or '—' }}</td></tr>
+      <tr><td class="k">Số điện thoại</td><td class="v">{{ sv.so_dien_thoai or '—' }}</td></tr>
+      <tr><td class="k">Địa chỉ liên hệ</td><td class="v">{{ sv.dia_chi or '—' }}</td></tr>
+    </table>
+    <div class="sign">
+      <div></div>
+      <div>Ngày {{ now.day }} tháng {{ now.month }} năm {{ now.year }}<br><b>Xác nhận của nhà trường</b><br><i>(Ký, ghi rõ họ tên)</i></div>
+    </div>
+    <div class="stamp">XÁC NHẬN<br>HỆ THỐNG<br>{{ now.strftime('%d/%m/%Y') }}</div>
+  </div>
+</body>
+</html>

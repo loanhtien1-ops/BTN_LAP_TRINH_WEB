@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Chỉ tiêu {{ ct.ma }}{% endblock %}
+{% block content %}
+{% set bmap = {'secondary': 'gray', 'info': 'blue', 'warning': 'amber', 'success': 'green'} %}
+{% set idx = buoc.index(ct.trang_thai) %}
+<div class="page-head">
+  <div>
+    <div class="crumbs"><a href="{{ url_for('dashboard.chi_tieu_list') }}">Danh mục chỉ tiêu</a> / {{ ct.ma }}</div>
+    <h1 class="page-title">{{ ct.ten }}</h1>
+    <div class="page-sub"><span class="badge {{ bmap[mau[ct.trang_thai]] }}">{{ ten_tt[ct.trang_thai] }}</span> &nbsp; Phiên bản {{ ct.phien_ban }} · cập nhật {{ ct.ngay_cap_nhat|dmy_gio }}</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:18px">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    {% for b in buoc %}
+      <span class="badge {{ 'purple' if loop.index0 <= idx else 'gray' }}">{{ loop.index }}. {{ ten_tt[b] }}</span>
+      {% if not loop.last %}<i class="bi bi-chevron-right muted"></i>{% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="grid side">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><div class="card-title serif">Định nghĩa</div></div>
+      <dl class="dl">
+        <dt>{{ nhan.ten }}</dt><dd>{{ ct.ten }}</dd>
+        <dt>{{ nhan.cong_thuc }}</dt><dd>{{ ct.cong_thuc }}</dd>
+        <dt>{{ nhan.don_vi }}</dt><dd>{{ ct.don_vi }}</dd>
+        <dt>{{ nhan.chieu_phan_tich }}</dt><dd>{{ ct.chieu_phan_tich or '—' }}</dd>
+        <dt>{{ nhan.nguon }}</dt><dd>{{ ct.nguon }}</dd>
+        <dt>{{ nhan.dau_moi }}</dt><dd>{{ ct.dau_moi }}</dd>
+        <dt>Người được xem</dt><dd>{{ 'Chỉ quản trị viên' if ct.vai_tro_xem == 'admin' else 'Nhân viên và quản trị viên' }}</dd>
+      </dl>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title serif">Kết quả đã công bố</div></div>
+      <div class="table-wrap"><table class="tbl">
+        <thead><tr><th>Giá trị</th><th>Phiên bản</th><th>Kỳ tính</th><th>Thời điểm</th><th>Người công bố</th></tr></thead>
+        <tbody>
+        {% for k in ket_qua %}
+          <tr><td><b>{{ k.gia_tri if k.gia_tri is not none else '—' }}</b> {{ ct.don_vi }}</td><td>v{{ k.phien_ban }}</td>
+            <td>{% if k.ky_tu or k.ky_den %}{{ k.ky_tu|dmy }} → {{ k.ky_den|dmy }}{% else %}Toàn bộ{% endif %}</td>
+            <td>{{ k.thoi_diem_tinh|dmy_gio }}</td><td>{{ k.ho_ten or '—' }}</td></tr>
+        {% else %}
+          <tr><td colspan="5"><div class="empty">Chưa có kết quả nào được công bố.</div></td></tr>
+        {% endfor %}
+        </tbody></table></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title serif">Lịch sử</div></div>
+      <ul class="timeline">
+        {% for h in lich_su %}
+        <li>
+          <b>{{ ten_hd.get(h.hanh_dong, h.hanh_dong) }}</b> <span class="muted small">· v{{ h.phien_ban }}</span>
+          {% if h.trang_thai_cu %}<span class="muted small"> · {{ ten_tt.get(h.trang_thai_cu, h.trang_thai_cu) }} → {{ ten_tt.get(h.trang_thai_moi, h.trang_thai_moi) }}</span>{% endif %}
+          <div class="muted small">{{ h.ngay_thuc_hien|dmy_gio }}{% if h.ho_ten %} · {{ h.ho_ten }}{% endif %}</div>
+          {% if h.can_cu %}<div class="small">Căn cứ: {{ h.can_cu }}</div>{% endif %}
+          {% if h.truoc %}
+          <details class="small" style="margin-top:4px"><summary>Nội dung trước khi sửa</summary>
+            <dl class="dl" style="grid-template-columns:130px 1fr;margin-top:6px">
+              {% for k, v in h.truoc.items() %}<dt>{{ nhan.get(k, k) }}</dt><dd style="font-weight:400">{{ v or '—' }}</dd>{% endfor %}
+            </dl>
+          </details>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  {% if la_admin %}
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Chuyển bước</div></div>
+      {% for hd in ['xac_nhan_nguon', 'kiem_tra', 'cong_bo', 'tra_ve'] %}
+        {% if ct.trang_thai in cho_phep[hd] %}
+        <form method="post" action="{{ url_for('dashboard.chi_tieu_chuyen', ma=ct.ma) }}" class="field" style="padding-bottom:14px;border-bottom:1px solid var(--line)">
+          <input type="hidden" name="csrf" value="{{ dash_csrf }}">
+          <input type="hidden" name="hanh_dong" value="{{ hd }}">
+          <label class="lbl">{{ ten_hd[hd] }}</label>
+          {% if hd == 'cong_bo' and ct.ma != 'SV01' %}
+          <div class="form-grid">
+            <div class="field"><label class="lbl small">Từ ngày</label><input class="input" type="date" name="tu_ngay"></div>
+            <div class="field"><label class="lbl small">Đến ngày</label><input class="input" type="date" name="den_ngay"></div>
+          </div>
+          {% endif %}
+          <input class="input" name="can_cu" placeholder="{{ 'Lý do (bắt buộc)' if hd == 'tra_ve' else 'Căn cứ / ghi chú (không bắt buộc)' }}" {{ 'required' if hd == 'tra_ve' }}>
+          <button class="btn sm {{ 'danger' if hd == 'tra_ve' else '' }}" style="margin-top:10px" type="submit">{{ ten_hd[hd] }}</button>
+        </form>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <form class="card" method="post" action="{{ url_for('dashboard.chi_tieu_sua', ma=ct.ma) }}">
+      <input type="hidden" name="csrf" value="{{ dash_csrf }}">
+      <div class="card-head"><div class="card-title">Sửa định nghĩa</div></div>
+      <div class="callout amber" style="margin-bottom:14px">Sửa định nghĩa sẽ tăng phiên bản và đưa chỉ tiêu về Nháp.</div>
+      <div class="field"><label class="lbl">{{ nhan.ten }}</label><input class="input" name="ten" value="{{ ct.ten }}" required></div>
+      <div class="field"><label class="lbl">{{ nhan.cong_thuc }}</label><textarea class="input" name="cong_thuc" rows="3" required>{{ ct.cong_thuc }}</textarea></div>
+      <div class="field"><label class="lbl">{{ nhan.don_vi }}</label><input class="input" name="don_vi" value="{{ ct.don_vi }}" required></div>
+      <div class="field"><label class="lbl">{{ nhan.chieu_phan_tich }}</label><input class="input" name="chieu_phan_tich" value="{{ ct.chieu_phan_tich or '' }}"></div>
+      <div class="field"><label class="lbl">{{ nhan.nguon }}</label><input class="input" name="nguon" value="{{ ct.nguon }}" required></div>
+      <div class="field"><label class="lbl">{{ nhan.dau_moi }}</label><input class="input" name="dau_moi" value="{{ ct.dau_moi }}" required></div>
+      <div class="field"><label class="lbl">Căn cứ điều chỉnh <span class="req">*</span></label><input class="input" name="can_cu" required placeholder="Vì sao sửa định nghĩa?"></div>
+      <button class="btn block" type="submit">Lưu định nghĩa</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

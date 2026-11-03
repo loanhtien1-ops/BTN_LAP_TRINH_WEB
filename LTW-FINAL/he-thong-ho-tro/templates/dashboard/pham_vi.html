@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Phạm vi nhân viên{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Phạm vi <em class="hl">nhân viên</em></h1>
+    <div class="page-sub">Chọn loại hỗ trợ mà mỗi nhân viên được xem trên dashboard. Không chọn gì = xem tất cả.</div>
+  </div>
+</div>
+
+<form method="post" class="card">
+  <input type="hidden" name="csrf" value="{{ dash_csrf }}">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Nhân viên</th>{% for l in loai %}<th class="text-center">{{ l.ten_loai }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for nv in nhan_vien %}
+        <tr>
+          <td><b>{{ nv.ho_ten or nv.username }}</b><span class="sub">{{ nv.username }}</span></td>
+          {% for l in loai %}
+          <td class="text-center"><input type="checkbox" style="accent-color:var(--accent);width:18px;height:18px" name="loai_{{ nv.id }}" value="{{ l.id }}" {{ 'checked' if (nv.id, l.id) in hien_tai }}></td>
+          {% endfor %}
+        </tr>
+      {% else %}
+        <tr><td colspan="{{ loai|length + 1 }}"><div class="empty">Chưa có nhân viên hỗ trợ.</div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="actions mt"><button class="btn" type="submit"><i class="bi bi-check2"></i> Lưu phạm vi</button></div>
+</form>
+{% endblock %}

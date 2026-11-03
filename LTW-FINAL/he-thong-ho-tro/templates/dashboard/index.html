@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Dashboard <em class="hl">hỗ trợ</em></h1>
+    <div class="page-sub">Phạm vi dữ liệu: <b>{{ pham_vi_text }}</b>. Hạn xử lý {{ sla_gio }} giờ.</div>
+  </div>
+</div>
+
+<form class="card no-print" id="filter" onsubmit="return false">
+  <div class="filters">
+    <div class="field"><label class="lbl" for="tu_ngay">Từ ngày</label><input class="input" type="date" id="tu_ngay" name="tu_ngay"></div>
+    <div class="field"><label class="lbl" for="den_ngay">Đến ngày</label><input class="input" type="date" id="den_ngay" name="den_ngay"></div>
+    <div class="field">
+      <label class="lbl" for="nganh_id">Ngành</label>
+      <select class="input" id="nganh_id" name="nganh_id"><option value="">Tất cả</option>
+        {% for n in nganh_list %}<option value="{{ n.id }}">{{ n.ma_nganh }} – {{ n.ten_nganh }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="lop_id">Lớp</label>
+      <select class="input" id="lop_id" name="lop_id"><option value="">Tất cả</option></select>
+    </div>
+    <div class="actions">
+      <button class="btn" type="button" id="btn-apply"><i class="bi bi-funnel"></i> Áp dụng</button>
+      <button class="btn light" type="button" id="btn-reset">Đặt lại</button>
+    </div>
+  </div>
+</form>
+
+<div id="msg"></div>
+
+<div class="stat-strip c6 mt" id="kpis"></div>
+
+<div class="grid c2">
+  <div class="card">
+    <div class="card-head"><div class="card-title serif">Theo trạng thái</div><span class="muted small">Bấm để xem danh sách</span></div>
+    <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div class="donut" id="donut"><div></div></div>
+      <div class="legend" id="legend" style="flex:1;min-width:160px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title serif">Theo loại hỗ trợ</div><span class="muted small">Bấm để xem danh sách</span></div>
+    <div class="bars" id="bars-loai"></div>
+  </div>
+</div>
+
+<div class="card mt">
+  <div class="card-head"><div class="card-title serif">Yêu cầu theo tháng</div><span class="muted small">Số yêu cầu · giờ giải quyết trung bình bên dưới</span></div>
+  <div class="cols" id="cols-thang"></div>
+</div>
+
+<div class="grid c2 mt">
+  <div class="card"><div class="card-head"><div class="card-title serif">Theo ngành</div></div><div class="bars" id="bars-nganh"></div></div>
+  <div class="card"><div class="card-head"><div class="card-title serif">Theo lớp</div></div><div class="bars" id="bars-lop"></div></div>
+</div>
+
+<div class="card mt" id="drill" hidden>
+  <div class="card-head"><div class="card-title serif" id="drill-title">Danh sách yêu cầu</div><button class="btn sm light" id="drill-close" type="button">Đóng</button></div>
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã</th><th>Loại</th><th>Ưu tiên</th><th>Lớp</th><th>Ngày gửi</th><th>Giờ giải quyết</th><th>Trạng thái</th></tr></thead>
+      <tbody id="drill-body"></tbody>
+    </table>
+  </div>
+  <div class="pager"><span class="muted small" id="drill-info"></span><div class="pages" id="drill-pages"></div></div>
+  <div class="hint">Danh sách không hiển thị họ tên hay mã sinh viên.</div>
+</div>
+
+{% if la_admin %}
+<div class="page-head mt" style="margin-top:34px"><div><h2 class="page-title" style="font-size:28px">Toàn <em class="hl">hệ thống</em></h2><div class="page-sub">Số liệu dành cho quản trị viên.</div></div></div>
+<div class="grid c2">
+  <div class="card"><div class="card-head"><div class="card-title serif">Sinh viên</div><b id="sv-tong"></b></div>
+    <div class="muted small" style="margin-bottom:6px">Theo trạng thái học</div><div class="bars" id="bars-sv-hoc"></div>
+    <div class="muted small" style="margin:16px 0 6px">Theo khóa</div><div class="bars" id="bars-sv-khoa"></div>
+  </div>
+  <div class="card"><div class="card-head"><div class="card-title serif">Vận hành</div></div>
+    <div class="muted small" style="margin-bottom:6px">Tài khoản theo vai trò</div><div class="bars" id="bars-tk"></div>
+    <div class="muted small" style="margin:16px 0 6px">Yêu cầu theo nhân viên xử lý</div><div class="bars" id="bars-nv"></div>
+    <div class="callout mt" id="ph-note"></div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card mt">
+  <div class="card-head"><div class="card-title">Chỉ tiêu đang theo dõi</div><a href="{{ url_for('dashboard.chi_tieu_list') }}">Danh mục chỉ tiêu →</a></div>
+  <div class="table-wrap"><table class="tbl"><thead><tr><th>Mã</th><th>Tên chỉ tiêu</th><th>Đơn vị</th><th>Trạng thái</th></tr></thead><tbody>
+    {% for c in chi_tieu %}<tr><td><a href="{{ url_for('dashboard.chi_tieu_detail', ma=c.ma) }}"><b>{{ c.ma }}</b></a></td><td>{{ c.ten }}</td><td>{{ c.don_vi }}</td><td><span class="badge {{ {'nhap': 'gray', 'da_xac_nhan_nguon': 'blue', 'da_kiem_tra': 'amber', 'da_cong_bo': 'green'}[c.trang_thai] }}">{{ c.ten_trang_thai }}</span></td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="hint" id="meta-note" style="margin-top:12px"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var LOP = {{ lop_list|tojson }};
+  var LA_ADMIN = {{ 'true' if la_admin else 'false' }};
+  var URL = {
+    hoTro: "{{ url_for('dashboard.api_ho_tro') }}",
+    chiTiet: "{{ url_for('dashboard.api_chi_tiet') }}",
+    sv: "{{ url_for('dashboard.api_sinh_vien') }}",
+    ht: "{{ url_for('dashboard.api_he_thong') }}"
+  };
+  var TEN_TT = {cho_xu_ly: "Chờ xử lý", dang_xu_ly: "Đang xử lý", da_giai_quyet: "Đã giải quyết"};
+  var MAU_TT = {cho_xu_ly: "#e0a526", dang_xu_ly: "#3b7fd6", da_giai_quyet: "#2f9e5b"};
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]; }); };
+  var fmt = function (v, unit) { return v == null ? "—" : String(v).replace(".", ",") + (unit || ""); };
+
+  function params(extra) {
+    var p = new URLSearchParams();
+    ["tu_ngay", "den_ngay", "nganh_id", "lop_id"].forEach(function (k) { var v = $(k).value; if (v) p.set(k, v); });
+    Object.keys(extra || {}).forEach(function (k) { p.set(k, extra[k]); });
+    return p.toString();
+  }
+  function getJSON(url) {
+    return fetch(url, {headers: {"Accept": "application/json"}}).then(function (r) {
+      return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "Lỗi tải dữ liệu"); return j; });
+    });
+  }
+  function showError(e) { $("msg").innerHTML = '<div class="flash danger"><i class="bi bi-exclamation-octagon-fill"></i><div>' + esc(e.message) + "</div></div>"; }
+
+  function fillLop() {
+    var n = $("nganh_id").value, sel = $("lop_id"), cur = sel.value;
+    sel.innerHTML = '<option value="">Tất cả</option>' + LOP.filter(function (l) { return !n || String(l.nganh_id) === n; })
+      .map(function (l) { return '<option value="' + l.id + '">' + esc(l.ma_lop) + "</option>"; }).join("");
+    sel.value = [].some.call(sel.options, function (o) { return o.value === cur; }) ? cur : "";
+  }
+
+  function bars(id, items, onclick) {
+    var max = Math.max.apply(null, items.map(function (i) { return i.so; }).concat([1]));
+    $(id).innerHTML = items.length ? items.map(function (i, idx) {
+      return '<div class="bar-row' + (onclick ? " clickable" : "") + '" data-i="' + idx + '"><span>' + esc(i.ten || i.ma) + '</span><div class="track"><i style="width:' + (i.so / max * 100) + '%"></i></div><span class="v">' + i.so + "</span></div>";
+    }).join("") : '<div class="muted">Không có dữ liệu.</div>';
+    if (onclick) $(id).onclick = function (e) { var r = e.target.closest(".bar-row"); if (r) onclick(items[+r.dataset.i]); };
+  }
+
+  function kpis(d) {
+    var t = d.thoi_gian;
+    var rows = [
+      ["i-purple", "bi-inbox", d.tong, "Tổng yêu cầu", null],
+      ["i-green", "bi-check2-circle", fmt(d.ty_le_giai_quyet, "%"), "Tỷ lệ giải quyết", null],
+      ["i-blue", "bi-lightning-charge", fmt(t.tiep_nhan_tb_gio, " giờ"), "Tiếp nhận TB", null],
+      ["i-pink", "bi-stopwatch", fmt(t.giai_quyet_tb_gio, " giờ"), "Giải quyết TB", null],
+      ["i-amber", "bi-award", fmt(t.ty_le_dung_han, "%"), "Đúng hạn " + t.sla_gio + "h", null],
+      ["i-red", "bi-exclamation-triangle", d.qua_han, "Quá hạn", "qua_han"]
+    ];
+    $("kpis").innerHTML = rows.map(function (r) {
+      return '<div class="stat' + (r[4] ? " clickable" : "") + '"' + (r[4] ? ' data-k="' + r[4] + '"' : "") + '><span class="ico ' + r[0] + '"><i class="bi ' + r[1] + '"></i></span><div><b>' + r[2] + "</b><span>" + r[3] + "</span></div></div>";
+    }).join("");
+    var q = $("kpis").querySelector("[data-k]");
+    if (q) q.onclick = function () { drill({qua_han: "1"}, "Yêu cầu quá hạn"); };
+  }
+
+  function donut(d) {
+    var tot = d.tong || 0, acc = 0, stops = [];
+    Object.keys(TEN_TT).forEach(function (k) {
+      var v = d.theo_trang_thai[k] || 0, a = tot ? acc / tot * 100 : 0, b = tot ? (acc + v) / tot * 100 : 0;
+      if (v) stops.push(MAU_TT[k] + " " + a + "% " + b + "%");
+      acc += v;
+    });
+    $("donut").style.background = stops.length ? "conic-gradient(" + stops.join(",") + ")" : "#f3eeec";
+    $("donut").firstElementChild.innerHTML = tot + "<small>yêu cầu</small>";
+    $("legend").innerHTML = Object.keys(TEN_TT).map(function (k) {
+      return '<div class="clickable" data-s="' + k + '"><i style="background:' + MAU_TT[k] + '"></i>' + TEN_TT[k] + "<b>" + (d.theo_trang_thai[k] || 0) + "</b></div>";
+    }).join("");
+    $("legend").onclick = function (e) { var r = e.target.closest("[data-s]"); if (r) drill({trang_thai: r.dataset.s}, TEN_TT[r.dataset.s]); };
+  }
+
+  function cols(d) {
+    var max = Math.max.apply(null, d.theo_thang.map(function (m) { return m.so; }).concat([1]));
+    $("cols-thang").innerHTML = d.theo_thang.length ? d.theo_thang.map(function (m) {
+      return '<div class="col" title="' + m.thang + '"><b>' + m.so + '</b><i style="height:' + (m.so / max * 140) + 'px"></i><span>' + m.thang.slice(5) + "/" + m.thang.slice(2, 4) + '</span><span>' + (m.gio_giai_quyet_tb == null ? "–" : fmt(m.gio_giai_quyet_tb, "g")) + "</span></div>";
+    }).join("") : '<div class="muted">Không có dữ liệu.</div>';
+  }
+
+  // ---- truy xuất chi tiết
+  var drillState = {};
+  function drill(extra, title, page) {
+    drillState = {extra: extra, title: title};
+    var e = Object.assign({}, extra); if (page) e.page = page;
+    getJSON(URL.chiTiet + "?" + params(e)).then(function (j) {
+      $("drill").hidden = false;
+      $("drill-title").textContent = title + " (" + j.tong + ")";
+      $("drill-body").innerHTML = j.muc.length ? j.muc.map(function (m) {
+        var c = {cho_xu_ly: "amber", dang_xu_ly: "blue", da_giai_quyet: "green"}[m.trang_thai];
+        return '<tr class="clickable" onclick="location.href=\'' + esc(m.url) + '\'"><td><a href="' + esc(m.url) + '">#' + m.id + "</a></td><td>" + esc(m.loai) + "</td><td>" + esc(m.uu_tien) + "</td><td>" + esc(m.lop) + "</td><td>" + esc(m.ngay_tao) + "</td><td>" + fmt(m.gio_giai_quyet, " giờ") + '</td><td><span class="badge ' + c + '">' + esc(m.ten_trang_thai) + "</span></td></tr>";
+      }).join("") : '<tr><td colspan="7"><div class="empty">Không có yêu cầu.</div></td></tr>';
+      $("drill-info").textContent = "Trang " + j.trang + " / " + j.so_trang;
+      var pg = "";
+      if (j.so_trang > 1) {
+        pg += j.trang > 1 ? '<a href="#" data-p="' + (j.trang - 1) + '">‹</a>' : '<span class="off">‹</span>';
+        pg += '<span class="cur">' + j.trang + "</span>";
+        pg += j.trang < j.so_trang ? '<a href="#" data-p="' + (j.trang + 1) + '">›</a>' : '<span class="off">›</span>';
+      }
+      $("drill-pages").innerHTML = pg;
+      $("drill").scrollIntoView({behavior: "smooth", block: "nearest"});
+    }).catch(showError);
+  }
+  $("drill-pages").onclick = function (e) { var a = e.target.closest("[data-p]"); if (a) { e.preventDefault(); drill(drillState.extra, drillState.title, a.dataset.p); } };
+  $("drill-close").onclick = function () { $("drill").hidden = true; };
+
+  function load() {
+    $("msg").innerHTML = "";
+    getJSON(URL.hoTro + "?" + params()).then(function (d) {
+      kpis(d); donut(d); cols(d);
+      bars("bars-loai", d.theo_loai, function (i) { drill({loai: i.id}, i.ten); });
+      bars("bars-nganh", d.theo_nganh);
+      bars("bars-lop", d.theo_lop);
+      $("meta-note").textContent = d.ghi_chu + " Tính lúc " + d.thoi_diem_tinh + ". Nguồn: " + d.nguon.join(", ") + ".";
+    }).catch(showError);
+    if (LA_ADMIN) {
+      getJSON(URL.sv + "?" + params()).then(function (d) {
+        $("sv-tong").textContent = d.tong + " sinh viên";
+        bars("bars-sv-hoc", d.theo_trang_thai_hoc.map(function (x) { return {ten: x.ten, so: x.so}; }));
+        bars("bars-sv-khoa", d.theo_khoa.map(function (x) { return {ten: x.ten, so: x.so}; }));
+      }).catch(showError);
+      getJSON(URL.ht + "?" + params()).then(function (d) {
+        bars("bars-tk", d.tai_khoan_theo_vai_tro.map(function (x) { return {ten: x.ten, so: x.so}; }));
+        bars("bars-nv", d.yeu_cau_theo_nhan_vien.map(function (x) { return {ten: x.ten + " (xong " + x.da_giai_quyet + ")", so: x.so}; }));
+        $("ph-note").textContent = "Phản hồi: " + d.phan_hoi.cong_khai + " công khai, " + d.phan_hoi.noi_bo + " nội bộ · " + d.so_lan_doi_trang_thai + " lần đổi trạng thái.";
+      }).catch(showError);
+    }
+  }
+
+  $("nganh_id").onchange = fillLop;
+  $("btn-apply").onclick = function () { $("drill").hidden = true; load(); };
+  $("btn-reset").onclick = function () { $("filter").reset(); fillLop(); $("drill").hidden = true; load(); };
+  fillLop(); load();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import pager, yc_badge, uutien_badge, empty %}
+{% block title %}Yêu cầu hỗ trợ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Yêu cầu <em class="hl">hỗ trợ</em></h1>
+    <div class="page-sub">{{ total }} yêu cầu phù hợp · tổng cộng {{ tong }}. Yêu cầu quá hạn và ưu tiên cao được đưa lên đầu.</div>
+  </div>
+</div>
+
+<div class="tabs" style="margin-bottom:18px">
+  <a href="{{ url_for('support.manage', loai=f.loai, q=f.q) }}" class="{{ 'on' if not f.trang_thai }}">Tất cả <b>{{ tong }}</b></a>
+  {% for v, ten in trang_thai_list %}
+  <a href="{{ url_for('support.manage', trang_thai=v, loai=f.loai, q=f.q) }}" class="{{ 'on' if f.trang_thai == v }}">{{ ten }} <b>{{ counts.get(v, 0) }}</b></a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <form method="get" class="filters">
+    {% if f.trang_thai %}<input type="hidden" name="trang_thai" value="{{ f.trang_thai }}">{% endif %}
+    <div class="field grow">
+      <label class="lbl" for="q">Tìm kiếm</label>
+      <div class="searchbox"><i class="bi bi-search"></i>
+        <input class="input" id="q" name="q" value="{{ f.q }}" placeholder="Tiêu đề, mã hoặc tên sinh viên">
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="loai">Loại hỗ trợ</label>
+      <select class="input" id="loai" name="loai">
+        <option value="">Tất cả</option>
+        {% for l in loai_list %}<option value="{{ l.id }}" {{ 'selected' if f.loai == l.id|string }}>{{ l.ten_loai }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit"><i class="bi bi-funnel"></i> Lọc</button>
+      <a class="btn light" href="{{ url_for('support.manage') }}">Xóa lọc</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã</th><th>Yêu cầu</th><th>Sinh viên</th><th>Loại</th><th>Ưu tiên</th><th>Ngày gửi</th><th>Xử lý</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+      {% for t in tickets %}
+        {% set s = sla.get(t.id) %}
+        <tr class="clickable" onclick="location.href='{{ url_for('support.detail', yc_id=t.id) }}'">
+          <td>#{{ t.id }}</td>
+          <td>
+            <a href="{{ url_for('support.detail', yc_id=t.id) }}"><b>{{ t.tieu_de }}</b></a>
+            {% if s %}<span class="sub"><span class="badge {{ 'red' if s.muc == 'qua_han' else 'amber' }}">{{ s.nhan }}</span></span>{% endif %}
+          </td>
+          <td>{% if t.la_an_danh %}<span class="badge purple plain"><i class="bi bi-incognito"></i> Ẩn danh</span>{% else %}{{ t.ho_ten_sv }}<span class="sub">{{ t.ma_sv }} · {{ t.ma_lop }}</span>{% endif %}</td>
+          <td>{{ t.ten_loai }}</td>
+          <td>{{ uutien_badge(t.muc_uu_tien) }}</td>
+          <td>{{ t.ngay_tao|dmy_gio }}</td>
+          <td>{{ t.ten_nguoi_xu_ly or '—' }}</td>
+          <td>{{ yc_badge(t.trang_thai) }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8">{{ empty('Không có yêu cầu nào phù hợp.', 'bi-inbox') }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pager">
+    <span class="muted small">Trang {{ page }} / {{ pages }}</span>
+    {{ pager('support.manage', page, pages, f) }}
+  </div>
+</div>
+{% endblock %}

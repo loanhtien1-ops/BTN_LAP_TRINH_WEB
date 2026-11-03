@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import sv_badge %}
+{% block title %}{{ sv.ho_ten }}{% endblock %}
+{% block content %}
+{% set admin = current_user['vai_tro'] == 'admin' %}
+{% set student = current_user['vai_tro'] == 'student' %}
+<div class="page-head">
+  <div>
+    {% if not student %}<div class="crumbs"><a href="{{ url_for('students.list_students') }}">Sinh viên</a> / {{ sv.ma_sv }}</div>{% endif %}
+    <h1 class="page-title">{{ sv.ho_ten }}</h1>
+    <div class="page-sub">{{ sv.ma_sv }} · {{ sv.ma_lop }} · {{ sv_badge(sv.trang_thai) }}</div>
+  </div>
+  <div class="actions">
+    {% if not student %}<a class="btn light" href="{{ url_for('students.list_students') }}"><i class="bi bi-arrow-left"></i> Danh sách</a>{% endif %}
+    {% if admin %}
+      <a class="btn" href="{{ url_for('students.edit', sv_id=sv.id) }}"><i class="bi bi-pencil"></i> Sửa hồ sơ</a>
+      <form method="post" action="{{ url_for('students.delete', sv_id=sv.id) }}" data-confirm="Xóa sinh viên {{ sv.ho_ten }} ({{ sv.ma_sv }})? Thao tác không thể hoàn tác.">
+        <button class="btn danger"><i class="bi bi-trash"></i> Xóa</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid c2">
+  <div class="card">
+    <div class="card-head"><div class="card-title serif">Thông tin cá nhân</div></div>
+    <dl class="dl">
+      <dt>Mã sinh viên</dt><dd>{{ sv.ma_sv }}</dd>
+      <dt>Họ và tên</dt><dd>{{ sv.ho_ten }}</dd>
+      <dt>Ngày sinh</dt><dd>{{ sv.ngay_sinh|dmy }}</dd>
+      <dt>Giới tính</dt><dd>{{ sv.gioi_tinh or '—' }}</dd>
+      <dt>Email</dt><dd>{{ sv.email or '—' }}</dd>
+      <dt>Số điện thoại</dt><dd>{{ sv.so_dien_thoai or '—' }}</dd>
+      <dt>Địa chỉ</dt><dd>{{ sv.dia_chi or '—' }}</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title serif">Quá trình theo học</div></div>
+    <dl class="dl">
+      <dt>Ngành</dt><dd>{{ sv.ma_nganh }} – {{ sv.ten_nganh }}</dd>
+      <dt>Lớp</dt><dd>{{ sv.ma_lop }} – {{ sv.ten_lop }}</dd>
+      <dt>Khóa học</dt><dd>{{ sv.khoa_hoc }}</dd>
+      <dt>Trạng thái</dt><dd>{{ sv_badge(sv.trang_thai) }}</dd>
+      <dt>Ngày tạo hồ sơ</dt><dd>{{ sv.ngay_tao|dmy }}</dd>
+    </dl>
+  </div>
+</div>
+{% endblock %}

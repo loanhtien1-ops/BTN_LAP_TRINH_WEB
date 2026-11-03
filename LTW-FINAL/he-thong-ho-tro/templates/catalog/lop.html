@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty %}
+{% block title %}Lớp & khóa học{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Lớp &amp; <em class="hl">khóa học</em></h1>
+    <div class="page-sub">Mỗi lớp thuộc một ngành và một khóa.</div>
+  </div>
+  <div class="actions">
+    <button class="btn" data-dialog="dlg-lop" data-title="Thêm lớp"><i class="bi bi-plus-lg"></i> Thêm lớp</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="tbl">
+      <thead><tr><th>Mã lớp</th><th>Tên lớp</th><th>Ngành</th><th>Khóa</th><th>Sinh viên</th><th></th></tr></thead>
+      <tbody>
+      {% for l in lop_list %}
+        <tr>
+          <td><b>{{ l.ma_lop }}</b></td>
+          <td>{{ l.ten_lop }}</td>
+          <td>{{ l.ma_nganh }}<span class="sub">{{ l.ten_nganh }}</span></td>
+          <td>{{ l.khoa_hoc }}</td>
+          <td>{{ l.so_sv }}</td>
+          <td class="nowrap text-right">
+            <button class="icon-btn" title="Sửa" data-dialog="dlg-lop" data-title="Sửa lớp"
+              data-fill='{{ {"id": l.id, "ma_lop": l.ma_lop, "ten_lop": l.ten_lop, "khoa_hoc": l.khoa_hoc, "nganh_id": l.nganh_id}|tojson|forceescape }}'><i class="bi bi-pencil"></i></button>
+            <form method="post" action="{{ url_for('catalog.lop_delete', lop_id=l.id) }}" style="display:inline" data-confirm="Xóa lớp {{ l.ma_lop }}?">
+              <button class="icon-btn del" title="Xóa"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">{{ empty('Chưa có lớp nào.', 'bi-collection') }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<dialog id="dlg-lop">
+  <form method="post" action="{{ url_for('catalog.lop_save') }}" class="dlg-body">
+    <h3 data-title>Thêm lớp</h3>
+    <input type="hidden" name="id" value="">
+    <div class="form-grid">
+      <div class="field">
+        <label class="lbl" for="ma_lop">Mã lớp <span class="req">*</span></label>
+        <input class="input" id="ma_lop" name="ma_lop" required maxlength="20">
+      </div>
+      <div class="field">
+        <label class="lbl" for="khoa_hoc">Khóa học <span class="req">*</span></label>
+        <input class="input" id="khoa_hoc" name="khoa_hoc" required maxlength="20" placeholder="K66">
+      </div>
+      <div class="field full">
+        <label class="lbl" for="ten_lop">Tên lớp <span class="req">*</span></label>
+        <input class="input" id="ten_lop" name="ten_lop" required maxlength="100">
+      </div>
+      <div class="field full">
+        <label class="lbl" for="nganh_id">Ngành học <span class="req">*</span></label>
+        <select class="input" id="nganh_id" name="nganh_id" required>
+          <option value="">— Chọn ngành —</option>
+          {% for n in nganh_list %}<option value="{{ n.id }}">{{ n.ma_nganh }} – {{ n.ten_nganh }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn light" data-close>Hủy</button>
+      <button class="btn" type="submit">Lưu</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
